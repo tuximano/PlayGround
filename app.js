@@ -242,16 +242,6 @@
     const gymConditionBar = refs.gymConditionBar;
     if (gymConditionBar) gymConditionBar.style.width = `${player.condition || 87}%`;
 
-    const playerHealthBar = refs.playerHealth;
-    const opponentHealthBar = refs.opponentHealth;
-    if (playerHealthBar) playerHealthBar.style.width = `${Math.max(0, state.fight.playerHealth || 100)}%`;
-    if (opponentHealthBar) opponentHealthBar.style.width = `${Math.max(0, state.fight.opponentHealth || 100)}%`;
-
-    const plStamina = refs.playerStamina;
-    const opStamina = refs.opponentStamina;
-    if (plStamina) plStamina.style.width = `${Math.max(0, state.fight.playerStamina || 100)}%`;
-    if (opStamina) opStamina.style.width = `${Math.max(0, state.fight.opponentStamina || 100)}%`;
-
     const selectedDivision = state.selectedDivision || player.division || 'Leve';
     const divisionSelect = refs.divisionSelect;
     if (divisionSelect) divisionSelect.value = selectedDivision;
@@ -280,6 +270,11 @@
   function updateFightHud() {
     const fight = state.fight;
     const player = state.player;
+
+    if (refs.playerHealth) refs.playerHealth.style.width = `${clamp(fight.playerHealth ?? 100, 0, 100)}%`;
+    if (refs.opponentHealth) refs.opponentHealth.style.width = `${clamp(fight.opponentHealth ?? 100, 0, 100)}%`;
+    if (refs.playerStamina) refs.playerStamina.style.width = `${clamp(fight.playerStamina ?? 100, 0, 100)}%`;
+    if (refs.opponentStamina) refs.opponentStamina.style.width = `${clamp(fight.opponentStamina ?? 100, 0, 100)}%`;
 
     if (refs.roundBadge) refs.roundBadge.textContent = `ROUND ${fight.round || 1} / ${fight.totalRounds || 3}`;
     if (refs.fightTimer) refs.fightTimer.textContent = formatClock(fight.timer || 180);
@@ -323,20 +318,35 @@
 
   function generateOpponent() {
     const division = state.player.division || 'Leve';
-    const list = [
-      { name: 'Mateo “El Rayo” Cruz', record: '8–2–0', style: 'Contra-atacador', division: 'Leve', purse: 1200 },
-      { name: 'Rafael “Mármore” Nunes', record: '10–4–1', style: 'Pressionador', division: 'Leve', purse: 1400 },
-      { name: 'Brenno “Pistão” Vale', record: '9–3–0', style: 'Ortodoxo técnico', division: 'Leve', purse: 1350 },
-      { name: 'Iason “Léo” Mello', record: '12–5–1', style: 'Canhoto agressivo', division: 'Meio-médio', purse: 1700 }
+    const opponentNames = [
+      ['Mateo “El Rayo” Cruz', 'Contra-atacador'],
+      ['Rafael “Mármore” Nunes', 'Pressionador'],
+      ['Brenno “Pistão” Vale', 'Ortodoxo técnico'],
+      ['Iason “Léo” Mello', 'Canhoto agressivo'],
+      ['Adriano “Furacão” Sosa', 'Pressionador']
     ];
-    if (state.player.record[0] > 1) {
-      list.unshift({ name: 'Adriano “Furacão” Sosa', record: '15–7–0', style: 'Pressionador', division: 'Leve', purse: 1800 });
-    }
-    return list[Math.floor(Math.random() * list.length)];
+    const divisionIndex = Math.max(0, divisions.findIndex((entry) => entry.label === division));
+    const baseRecord = 8 + (state.player.record[0] || 0);
+    const list = opponentNames.map(([name, style], index) => ({
+      name,
+      style,
+      record: `${baseRecord + index}–${2 + index}–${index % 2}`,
+      division,
+      purse: 1200 + divisionIndex * 180 + index * 100
+    }));
+    const opponents = list.filter((entry) => entry.division === division);
+    const pool = opponents.length ? opponents : list;
+    const opponent = pool[Math.floor(Math.random() * pool.length)];
+    return { ...opponent, division };
   }
 
   function ensureFightSetup() {
     state.opponent = state.opponent && state.opponent.name ? state.opponent : generateOpponent();
+    state.fight.phase = 'idle';
+    state.fight.active = false;
+    state.fight.started = false;
+    state.fight.winner = null;
+    state.fight.finishMethod = null;
     state.fight.timer = 180;
     state.fight.round = 1;
     state.fight.playerScore = 0;
@@ -357,10 +367,13 @@
     battle.player.stamina = 100;
     battle.player.guard = false;
     battle.player.dodge = 0;
+    battle.player.guardTimer = 0;
+    battle.player.attackTimer = 0;
     battle.opponent.x = 70;
     battle.opponent.health = 100;
     battle.opponent.stamina = 100;
     battle.opponent.guard = false;
+    battle.opponent.guardTimer = 0;
     battle.opponent.dodge = 0;
     battle.started = false;
     battle.ended = false;
@@ -402,15 +415,24 @@
       state.player.streak = (state.player.streak || 0) + 1;
       state.player.cash += Number(state.opponent.purse || 1200);
       state.player.rank = clamp((state.player.rank || 38) - 3, 1, 99);
-      state.player.rankPoints = clamp((state.player.rankPoints || 62) + 18, 0, 100);
+      const rankPoints = (state.player.rankPoints || 0) + 18;
+      if (rankPoints >= 100) {
+        state.player.rankPoints = rankPoints - 100;
+        state.player.rank = clamp(state.player.rank - 1, 1, 99);
+      } else {
+        state.player.rankPoints = rankPoints;
+      }
+      state.player.popularity = clamp((state.player.popularity || 12) + 3, 0, 100);
+      state.player.day = (state.player.day || 1) + 1;
       state.player.condition = clamp((state.player.condition || 87) + 4, 0, 100);
       state.player.fatigue = clamp((state.player.fatigue || 13) + 12, 0, 100);
-      fight.lastFeedback = `Vitória por decisão! Você ganhou ${formatCash(state.opponent.purse || 1200)} e subiu no ranking.`;
-      showToast('Vitória confirmada!');
+      fight.lastFeedback = `${fight.finishMethod === 'ko' ? 'Vitória por nocaute!' : 'Vitória por decisão!'} Você ganhou ${formatCash(state.opponent.purse || 1200)} e subiu no ranking.`;
+      showToast(fight.finishMethod === 'ko' ? 'Vitória por nocaute!' : 'Vitória confirmada!');
     } else if (result === 'draw') {
       record[2] += 1;
       state.player.cash += 600;
       state.player.streak = 0;
+      state.player.day = (state.player.day || 1) + 1;
       fight.lastFeedback = 'Empate técnico. O ringue foi equilibrado até o último segundo.';
       showToast('Empate no ringue');
     } else {
@@ -418,9 +440,13 @@
       state.player.streak = 0;
       state.player.cash += 450;
       state.player.rank = clamp((state.player.rank || 38) + 2, 1, 99);
+      state.player.day = (state.player.day || 1) + 1;
+      state.player.popularity = clamp((state.player.popularity || 12) - 2, 0, 100);
       state.player.fatigue = clamp((state.player.fatigue || 13) + 18, 0, 100);
-      fight.lastFeedback = 'Derrota por pontos. Ajuste a postura e retorne mais forte.';
-      showToast('Derrota na estreia');
+      fight.lastFeedback = fight.finishMethod === 'ko'
+        ? 'Derrota por nocaute. Recupere-se e volte mais forte.'
+        : 'Derrota por pontos. Ajuste a postura e retorne mais forte.';
+      showToast(fight.finishMethod === 'ko' ? 'Derrota por nocaute' : 'Derrota por pontos');
     }
 
     state.player.record = record;
@@ -456,9 +482,10 @@
     const opponentHits = fight.opponentScore || 0;
     const playerWonRound = playerHits > opponentHits;
     const opponentWonRound = opponentHits > playerHits;
+    const roundPoints = playerWonRound ? [10, 9] : opponentWonRound ? [9, 10] : [10, 10];
 
-    fight.playerJudgeScore = (fight.playerJudgeScore || 0) + (playerWonRound ? 10 : 9);
-    fight.opponentJudgeScore = (fight.opponentJudgeScore || 0) + (opponentWonRound ? 10 : 9);
+    fight.playerJudgeScore = (fight.playerJudgeScore || 0) + roundPoints[0];
+    fight.opponentJudgeScore = (fight.opponentJudgeScore || 0) + roundPoints[1];
 
     if (fight.round >= fight.totalRounds) {
       const playerTotal = fight.playerJudgeScore;
@@ -480,23 +507,14 @@
     battle.opponent.health = fight.opponentHealth;
     battle.player.stamina = 100;
     battle.opponent.stamina = 100;
-    fight.lastFeedback = `Round ${completedRound}: ${playerWonRound ? 'você levou 10–9.' : opponentWonRound ? 'o rival levou 10–9.' : 'round equilibrado, 9–9.'} Começou o round ${fight.round}.`;
+    fight.lastFeedback = `Round ${completedRound}: ${playerWonRound ? 'você levou 10–9.' : opponentWonRound ? 'o rival levou 10–9.' : 'round equilibrado, 10–10.'} Começou o round ${fight.round}.`;
     updateFightHud();
   }
 
   function startRoundTransition() {
     const fight = state.fight;
-    if (!fight.active || fight.phase === 'finished') return;
-    if (fight.timer <= 0) {
-      if (fight.round >= fight.totalRounds) {
-        const p = fight.playerScore || 0;
-        const o = fight.opponentScore || 0;
-        if (p === o) endFight('draw');
-        else endFight(p > o ? 'win' : 'loss');
-      } else {
-        resolveRoundScore();
-      }
-    }
+    if (!fight.active || fight.phase === 'finished' || fight.timer > 0) return;
+    resolveRoundScore();
   }
 
   function processPlayerMove(key) {
@@ -505,38 +523,59 @@
 
     if (key === 'guard') {
       battle.player.guard = true;
-      fight.lastFeedback = 'Guardando. O adversário tenta quebrar a pressão.';
+      battle.player.guardTimer = 0.7;
+      fight.lastFeedback = 'Guarda alta. Espere o golpe e responda.';
       return;
     }
 
     if (key === 'dodge') {
+      if (battle.player.stamina < 5) {
+        fight.lastFeedback = 'Sem fôlego para esquivar. Recupere a distância.';
+        return;
+      }
+      battle.player.stamina = Math.max(0, battle.player.stamina - 5);
       battle.player.dodge = 0.6;
       fight.lastFeedback = 'Esquiva rápida. Corte o ângulo de ataque.';
       return;
     }
 
     if (key === 'clinch') {
-      fight.lastFeedback = 'Clinche. Reduza a velocidade e recupere stamina.';
+      battle.player.guard = true;
+      battle.player.guardTimer = 0.9;
+      battle.player.stamina = clamp(battle.player.stamina + 12, 0, 100);
+      fight.lastFeedback = 'Clinche! Você interrompeu a pressão e recuperou fôlego.';
       return;
     }
 
     const punchTypes = ['jab', 'cross', 'hook', 'upper', 'body'];
     if (!punchTypes.includes(key)) return;
-
-    const attackDamage = { jab: 7, cross: 10, hook: 13, upper: 11, body: 9 }[key];
-    const dist = Math.abs(battle.player.x - battle.opponent.x);
-    fight.totalShots = (fight.totalShots || 0) + 1;
-    if (dist > 27) {
-      fight.lastFeedback = 'Seu golpe foi longo. Feche a distância.';
+    if (battle.player.attackTimer > 0) return;
+    if (battle.player.stamina < 4) {
+      fight.lastFeedback = 'Você está sem fôlego. Movimente-se com calma para recuperar.';
       return;
     }
 
-    const blocked = battle.opponent.guard && Math.random() < 0.5;
-    const actualDamage = blocked ? Math.max(2, Math.round(attackDamage * 0.35)) : attackDamage + Math.round(Math.random() * 4);
+    const baseDamage = { jab: 7, cross: 10, hook: 13, upper: 11, body: 9 }[key];
+    const fatiguePenalty = clamp((state.player.fatigue || 0) / 250, 0, 0.35);
+    const conditionBonus = clamp((state.player.condition || 87) / 500, 0.1, 0.2);
+    const attackDamage = Math.round(baseDamage * (1 - fatiguePenalty + conditionBonus));
+    const staminaCost = { jab: 5, cross: 8, hook: 10, upper: 9, body: 7 }[key];
+    battle.player.stamina = Math.max(0, battle.player.stamina - staminaCost);
+    battle.player.attackTimer = 0.28;
+    const dist = Math.abs(battle.player.x - battle.opponent.x);
+    fight.totalShots = (fight.totalShots || 0) + 1;
+    if (dist > 27) {
+      fight.lastFeedback = 'Seu golpe foi longo. Aproxime-se antes de atacar.';
+      fight.accuracy = Math.round((fight.landed / Math.max(1, fight.totalShots)) * 100);
+      return;
+    }
+
+    const blocked = battle.opponent.guard && Math.random() < 0.65;
+    const actualDamage = blocked ? 0 : attackDamage + Math.round(Math.random() * 3);
 
     if (blocked) {
       fight.blocked = (fight.blocked || 0) + 1;
-      fight.lastFeedback = 'Bloqueio importante. Mantenha a pressão.';
+      fight.lastFeedback = 'O rival bloqueou. Varie os golpes para abrir a guarda.';
     } else {
       fight.landed = (fight.landed || 0) + 1;
       fight.playerScore = (fight.playerScore || 0) + 1;
@@ -546,6 +585,7 @@
     }
 
     if (battle.opponent.health <= 0) {
+      fight.finishMethod = 'ko';
       endFight('win');
       return;
     }
@@ -560,22 +600,29 @@
     const chance = Math.random();
 
     if (dist > 25) {
-      battle.opponent.x += chance > 0.55 ? 1.2 : -0.8;
-      battle.opponent.x = clamp(battle.opponent.x, 52, 90);
+      battle.opponent.x = clamp(battle.opponent.x - 1.4, 52, 90);
       fight.lastFeedback = 'O rival avança para fechar a distância.';
       return;
     }
 
-    if (chance > 0.6) {
+    if (chance > 0.62) {
       battle.opponent.guard = true;
-      fight.lastFeedback = 'O adversário se protege. Aproveite a brecha.';
+      battle.opponent.guardTimer = 0.85;
+      fight.lastFeedback = 'O adversário se protege. Varie os ataques.';
+      return;
+    }
+
+    if (battle.opponent.stamina < 5) {
+      fight.lastFeedback = 'O rival está cansado. Aumente a pressão.';
       return;
     }
 
     const selected = ['jab', 'cross', 'hook'][Math.floor(Math.random() * 3)];
     const damage = { jab: 5, cross: 8, hook: 12 }[selected];
-    const isBlocked = battle.player.guard && Math.random() > 0.4;
-    const finalDamage = isBlocked ? Math.max(2, Math.round(damage * 0.4)) : damage + Math.round(Math.random() * 4);
+    const isBlocked = (battle.player.guard || battle.player.dodge > 0) && Math.random() > 0.25;
+    const finalDamage = isBlocked ? 0 : damage + Math.round(Math.random() * 3);
+    battle.opponent.stamina = Math.max(0, battle.opponent.stamina - 5);
+    state.fight.opponentStamina = battle.opponent.stamina;
 
     if (isBlocked) {
       fight.blocked = (fight.blocked || 0) + 1;
@@ -583,16 +630,16 @@
     } else {
       battle.player.health = Math.max(0, battle.player.health - finalDamage);
       state.fight.playerHealth = battle.player.health;
+      fight.opponentScore = (fight.opponentScore || 0) + 1;
       fight.lastFeedback = `Contra-ataque do rival: ${selected.toUpperCase()} conectou.`;
       if (battle.player.health <= 0) {
+        fight.finishMethod = 'ko';
         endFight('loss');
         return;
       }
     }
 
     battle.opponent.guard = false;
-    battle.opponent.stamina = clamp(battle.opponent.stamina - 5, 0, 100);
-    state.fight.opponentStamina = battle.opponent.stamina;
   }
 
   function updateMovement(dt) {
@@ -618,15 +665,20 @@
       battle.opponent.x = clamp(battle.opponent.x, 52, 88);
     }
 
-    battle.opponent.guard = false;
-    if (battle.player.guard) {
-      battle.player.guard = state.fight.timer % 1.5 < 0.5;
-    }
+    battle.player.guardTimer = Math.max(0, (battle.player.guardTimer || 0) - dt);
+    battle.player.guard = battle.player.guardTimer > 0;
+    battle.player.dodge = Math.max(0, battle.player.dodge - dt);
+    battle.player.attackTimer = Math.max(0, battle.player.attackTimer - dt);
+    battle.opponent.guardTimer = Math.max(0, (battle.opponent.guardTimer || 0) - dt);
+    battle.opponent.guard = battle.opponent.guardTimer > 0;
 
-    state.fight.playerStamina = clamp(battle.player.stamina - (keyboard.a || keyboard.d ? 0.18 : 0.05), 0, 100);
-    battle.player.stamina = state.fight.playerStamina;
-    state.fight.opponentStamina = clamp(battle.opponent.stamina - 0.15, 0, 100);
-    battle.opponent.stamina = state.fight.opponentStamina;
+    const isMoving = moveVector.x !== 0 || moveVector.y !== 0;
+    const playerRecovery = isMoving ? 7 : 12;
+    const opponentRecovery = Math.abs(battle.player.x - battle.opponent.x) > 25 ? 10 : 7;
+    battle.player.stamina = clamp(battle.player.stamina + playerRecovery * dt, 0, 100);
+    battle.opponent.stamina = clamp(battle.opponent.stamina + opponentRecovery * dt, 0, 100);
+    state.fight.playerStamina = battle.player.stamina;
+    state.fight.opponentStamina = battle.opponent.stamina;
   }
 
   function updateFight(dt) {
@@ -635,21 +687,8 @@
     fight.timer = clamp((fight.timer || 180) - dt, 0, 180);
 
     if (fight.timer <= 0) {
-      if (fight.round >= fight.totalRounds) {
-        const playerScore = fight.playerScore || 0;
-        const opponentScore = fight.opponentScore || 0;
-        endFight(playerScore === opponentScore ? 'draw' : playerScore > opponentScore ? 'win' : 'loss');
-        return;
-      }
-      fight.round += 1;
-      fight.timer = 180;
-      fight.lastFeedback = `Round ${fight.round} começou. Mude a postura e mantenha o ritmo.`;
-      fight.playerScore = 0;
-      fight.opponentScore = 0;
-      battle.player.health = clamp(battle.player.health + 12, 0, 100);
-      battle.opponent.health = clamp(battle.opponent.health + 12, 0, 100);
-      state.fight.playerHealth = battle.player.health;
-      state.fight.opponentHealth = battle.opponent.health;
+      resolveRoundScore();
+      if (battle.ended) return;
     }
 
     if (performance.now() - battle.lastAiDecision > 1200) {
@@ -771,14 +810,18 @@
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'training-card';
-      card.innerHTML = `<span>${plan.name}</span><small>${plan.desc}</small><b>+${plan.effect}%</b>`;
+      card.innerHTML = `<span>${plan.name}</span><small>${plan.desc}</small><b>+${plan.effect}% · $ 80</b>`;
       card.addEventListener('click', () => {
         const player = state.player;
+        if ((Number(player.cash) || 0) < 80) {
+          showToast('Saldo insuficiente. O treino custa $ 80.');
+          return;
+        }
         player.condition = clamp(player.condition + plan.effect, 0, 100);
         player.fatigue = clamp(player.fatigue + plan.fatigue, 0, 100);
-        player.cash = Math.max(0, player.cash - 80);
+        player.cash = Number(player.cash) - 80;
         player.trainingWeek += 1;
-        state.player.condition = clamp(state.player.condition + 4, 0, 100);
+        player.condition = clamp(player.condition + 4, 0, 100);
         showToast(`${plan.name} concluído`);
         renderAll();
         persistState();
@@ -986,16 +1029,18 @@
   }
 
   function bindFightControls() {
+    const movementKeys = { up: 'ArrowUp', left: 'ArrowLeft', down: 'ArrowDown', right: 'ArrowRight' };
     document.querySelectorAll('[data-move]').forEach((button) => {
-      button.addEventListener('pointerdown', () => {
-        keyboard[button.dataset.move] = true;
+      const key = movementKeys[button.dataset.move];
+      if (!key) return;
+      const release = () => { keyboard[key] = false; };
+      button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        keyboard[key] = true;
       });
-      button.addEventListener('pointerup', () => {
-        keyboard[button.dataset.move] = false;
-      });
-      button.addEventListener('pointerleave', () => {
-        keyboard[button.dataset.move] = false;
-      });
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerleave', release);
     });
 
     document.querySelectorAll('[data-action]').forEach((button) => {
