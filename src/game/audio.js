@@ -168,9 +168,11 @@ export class SoundEngine {
 
   update(dt) {
     if (!this.ready || !this.crowdGain) return;
-    const target = this.scene === 'fight' ? (0.25 + this.heat * 0.75) * this.settings.crowd * 0.8 : 0;
-    this.crowdGain.gain.value += (target - this.crowdGain.gain.value) * Math.min(1, dt * 0.5);
-    if (this.crowdFilter) this.crowdFilter.frequency.value = 600 + this.heat * 900;
+    const safeDt = Number.isFinite(dt) ? Math.max(0, dt) : 0;
+    const heat = Number.isFinite(this.heat) ? this.heat : 0;
+    const target = this.scene === 'fight' ? (0.25 + heat * 0.75) * this.settings.crowd * 0.8 : 0;
+    this.crowdGain.gain.value += (target - this.crowdGain.gain.value) * Math.min(1, safeDt * 0.5);
+    if (this.crowdFilter) this.crowdFilter.frequency.value = 600 + heat * 900;
   }
 
   setHeat(h) { this.heat = h; }
