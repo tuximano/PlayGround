@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#100e0c">
+  <meta name="description" content="COMBAT//SHIFT — arena de movimento FPS arcade com sprint, slide infinito, air strafe, bunny hop e mantle.">
+  <title>COMBAT//SHIFT — Arena de Movimento</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230b0a09'/%3E%3Cpath d='M33 8 17 35h13l-4 21 18-29H31z' fill='%23ff5b1a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <main id="app">
+    <canvas id="game" aria-label="Arena 3D em primeira pessoa"></canvas>
+
+    <!-- Film / lens treatment. Purely CSS so it costs no draw calls in WebGL. -->
+    <div class="lens" aria-hidden="true">
+      <div class="vignette"></div>
+      <div class="grain"></div>
+      <div class="speedlines"></div>
+    </div>
+
+    <!-- ───────────────────────────── START SCREEN ───────────────────────────── -->
+    <section id="startScreen" class="start-screen" aria-label="Tela inicial">
+      <div class="start-grid" aria-hidden="true"></div>
+      <div class="start-topline">
+        <div class="brand brand--large">COMBAT<span>//</span>SHIFT</div>
+        <div class="build-stamp">
+          <span>ARENA 07</span>
+          <span>BUILD 1.0.0</span>
+          <span class="live-dot">SISTEMA ONLINE</span>
+        </div>
+      </div>
+
+      <div class="start-copy">
+        <div class="eyebrow"><i></i> ARENA DE MOVIMENTO · TREINO LIVRE</div>
+        <h1>MOVA-SE<br><em>COMO UM</em><br>PROBLEMA.</h1>
+        <p>Um killing floor compacto para quem trata o chão como sugestão. Corra, deslize sem parar, gire 180° no impulso e suba em tudo.</p>
+        <button id="startButton" type="button" aria-label="Start">START</button>
+        <div class="start-note"><span class="desk-note">CLIQUE PARA TRAVAR O MOUSE</span><span class="desk-note">WASD + MOUSE</span><span class="touch-note">TOQUE PARA JOGAR · ARRASTE PARA MIRAR</span></div>
+      </div>
+
+      <aside class="start-controls" aria-label="Controles">
+        <div class="controls-head"><span>PROTOCOLO DE MOVIMENTO</span><b>06</b></div>
+        <div class="control-row"><kbd>W A S D</kbd><span>MOVER / AIR STRAFE</span><i>01</i></div>
+        <div class="control-row"><kbd>SHIFT</kbd><span>SPRINT + FOV DINÂMICO</span><i>02</i></div>
+        <div class="control-row"><kbd>CTRL / C</kbd><span>SLIDE INFINITO</span><i>03</i></div>
+        <div class="control-row"><kbd>SPACE</kbd><span>PULO / BUNNY HOP</span><i>04</i></div>
+        <div class="control-row"><kbd>MOUSE 1</kbd><span>ATIRAR · RIFLE VK-9</span><i>05</i></div>
+        <div class="control-row"><kbd>AUTO</kbd><span>MANTLE EM PEITORIS</span><i>06</i></div>
+        <div class="controls-foot">MANTLE É AUTOMÁTICO. SEGURE O PULO AO POUSAR PARA MANTER O MOMENTO.</div>
+      </aside>
+
+      <div class="start-bottom">
+        <span>SETOR 07 / DOCA DE CARGA</span>
+        <span class="start-tip">DICA: ENTRE DESLIZANDO NO CONTÊINER ELEVADO.</span>
+        <span>60 FPS ALVO</span>
+      </div>
+      <div class="corner corner--tl"></div><div class="corner corner--tr"></div>
+      <div class="corner corner--bl"></div><div class="corner corner--br"></div>
+    </section>
+
+    <!-- ───────────────────────────── HUD ───────────────────────────── -->
+    <section id="hud" class="hud is-hidden" aria-label="Interface do jogo">
+      <header class="hud-top">
+        <div class="brand brand--hud">COMBAT<span>//</span>SHIFT <b>ARENA 07</b></div>
+        <div class="drill">
+          <span class="drill-label">DRILL DE MOVIMENTO</span>
+          <span class="drill-sub">ALVOS <b id="targetCount">00</b> / <b>09</b></span>
+        </div>
+        <div class="hud-stats">
+          <div><span>PONTOS</span><b id="score">0000</b></div>
+          <div><span>TEMPO</span><b id="timer">00:00</b></div>
+        </div>
+      </header>
+
+      <div class="compass" aria-hidden="true">
+        <span>270</span><i></i><b id="compassDir">N</b><i></i><span>090</span>
+      </div>
+
+      <div id="hitmarker" class="hitmarker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="crosshair" aria-hidden="true">
+        <i class="ch ch--t"></i><i class="ch ch--r"></i><i class="ch ch--b"></i><i class="ch ch--l"></i><i class="ch-dot"></i>
+      </div>
+
+      <div class="reticle-label"><span id="reticleState">PRONTO</span><i></i></div>
+
+      <div class="momentum">
+        <div class="speed-line">
+          <span class="speed-label">VELOCIDADE</span>
+          <span class="speed-value"><b id="speed">00.0</b><small>M/S</small></span>
+        </div>
+        <div class="speed-gauge"><i id="speedFill"></i><span></span><span></span><span></span><span></span></div>
+        <div class="state-chips" aria-label="Estado de movimento">
+          <span id="chipSprint">SPRINT</span>
+          <span id="chipSlide">SLIDE ∞</span>
+          <span id="chipAir">AIR</span>
+          <span id="chipBhop">BHOP</span>
+          <span id="chipMantle">MANTLE</span>
+        </div>
+      </div>
+
+      <div class="mini-map" aria-hidden="true">
+        <div class="mini-map__grid"></div>
+        <div id="miniPlayer"></div>
+        <span class="mini-map__label">SETOR 07</span>
+      </div>
+
+      <div class="weapon">
+        <div class="weapon-name"><span>VK-9</span><b>ARCADE</b></div>
+        <div class="ammo"><b id="ammo">30</b><span>/ ∞</span></div>
+        <div class="ammo-bar"><i id="ammoFill"></i></div>
+        <div id="reloadLabel" class="reload-label">R — RECARREGAR</div>
+      </div>
+
+      <div class="move-hints">
+        <span><kbd>SHIFT</kbd> SPRINT</span>
+        <span><kbd>CTRL</kbd> SLIDE</span>
+        <span><kbd>SPACE</kbd> BHOP</span>
+        <span><kbd>AUTO</kbd> MANTLE</span>
+        <span><kbd>R</kbd> RECARGA</span>
+      </div>
+
+      <div id="eventFeed" class="event-feed" aria-live="polite"></div>
+      <div id="toast" class="toast" aria-live="polite"></div>
+      <div id="focusHint" class="focus-hint">CLIQUE PARA CAPTURAR O MOUSE</div>
+
+      <div class="hud-bracket hud-bracket--tl"></div><div class="hud-bracket hud-bracket--tr"></div>
+      <div class="hud-bracket hud-bracket--bl"></div><div class="hud-bracket hud-bracket--br"></div>
+    </section>
+
+    <!-- ───────────────────────────── TOUCH CONTROLS ───────────────────────────── -->
+    <section id="touchControls" class="touch-controls is-hidden" aria-label="Controles de toque">
+      <div id="stickBase" class="stick-base"><div id="stickKnob" class="stick-knob"></div><span>MOVE</span></div>
+      <div class="touch-actions">
+        <button id="touchSprint" class="touch-btn touch-btn--small" type="button">SPRINT</button>
+        <button id="touchSlide" class="touch-btn touch-btn--small" type="button">SLIDE</button>
+        <button id="touchJump" class="touch-btn touch-btn--jump" type="button">JUMP</button>
+        <button id="touchFire" class="touch-btn touch-btn--fire" type="button">FIRE</button>
+      </div>
+      <div class="touch-tip">ARRASTE À DIREITA PARA MIRAR</div>
+    </section>
+
+    <div id="loading" class="loading"><div class="loading-mark">C<span>//</span>S</div><span>MONTANDO A ARENA</span><i></i></div>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
