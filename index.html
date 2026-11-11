@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#071116" />
+  <title>VELOCITY // Movement Lab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" aria-label="Jogo em primeira pessoa"></canvas>
+    <div class="scanlines" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">V</span><div><strong>VELOCITY</strong><small>MOVEMENT LAB <i>///</i> 01</small></div></div>
+      <div class="run-tag"><span class="live-dot"></span> LIVE RUN <b id="run-state">READY</b></div>
+    </header>
+    <section class="mission-card" id="mission-card">
+      <div class="eyebrow">TIME TRIAL <span>01 / TRAINING DECK</span></div>
+      <h1>Own the<br /><em>momentum.</em></h1>
+      <p>Encadeie corrida, slides e saltos.<br />Colete os 5 núcleos para fechar o percurso.</p>
+      <div class="mission-meta"><span><b>WASD</b> MOVER</span><span><b>SHIFT</b> SPRINT</span><span><b>CTRL</b> SLIDE</span><span><b>SPACE</b> PULAR</span></div>
+      <button id="start-button"><span>INICIAR RUN</span><b>↗</b></button>
+      <small class="look-hint">MOUSE PARA OLHAR <span>·</span> ESC PAUSA</small>
+    </section>
+    <div class="hud" id="hud" aria-hidden="true">
+      <div class="hud-top-left"><span class="eyebrow">PERCURSO</span><strong id="objective">NÚCLEOS <i>00</i> <small>/ 05</small></strong></div>
+      <div class="hud-top-right"><span class="eyebrow">TEMPO</span><strong id="timer">00:00.00</strong></div>
+      <div class="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+      <div class="status-pill" id="status-pill">PRONTO</div>
+      <div class="speed-panel"><span class="eyebrow">VELOCIDADE <small>m/s</small></span><strong><span id="speed">0</span><small>.0</small></strong><div class="speed-track"><i id="speed-bar"></i></div><div class="speed-modes"><span id="mode">WALK</span><span id="fov-readout">FOV 90°</span></div></div>
+      <div class="collect-toast" id="collect-toast">NÚCLEO ADQUIRIDO <b>+1</b></div>
+      <div class="finish-card" id="finish-card"><span class="eyebrow">PERCURSO CONCLUÍDO</span><strong id="final-time">00:00.00</strong><p>Movimento impecável.</p><button id="again-button">CORRER NOVAMENTE ↗</button></div>
+      <div class="pause-card" id="pause-card"><span class="eyebrow">RUN PAUSADA</span><strong>Mantenha o fluxo.</strong><button id="resume-button">CONTINUAR ↗</button></div>
+    </div>
+    <div class="mobile-controls" id="mobile-controls">
+      <div class="move-pad"><span>MOVE</span><button data-move="forward">▲</button><button data-move="left">◀</button><button data-move="back">▼</button><button data-move="right">▶</button></div>
+      <div class="action-pad"><button data-action="slide">SLIDE</button><button data-action="jump">JUMP</button><button data-action="sprint">RUN</button></div>
+    </div>
+    <footer class="bottom-bar"><span>WASD <i>MOVE</i> &nbsp; SHIFT <i>SPRINT</i> &nbsp; CTRL <i>SLIDE</i> &nbsp; SPACE <i>JUMP / MANTLE</i></span><span>VELOCITY LAB <b>●</b></span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
