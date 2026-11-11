@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f12">
+  <meta name="description" content="Operação Caos — FPS mobile original com operadores absurdos, cinco mapas e três modos de jogo.">
+  <title>OPERAÇÃO CAOS — FPS Mobile</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas" aria-label="Campo de batalha 3D"></canvas>
+  <div id="screen-fx" aria-hidden="true">
+    <div class="fx-grain"></div>
+    <div class="fx-vignette"></div>
+    <div id="damage-flash"></div>
+    <div id="heal-flash"></div>
+  </div>
+
+  <!-- ============================== MENU ============================== -->
+  <section id="menu" class="screen menu-screen">
+    <div class="menu-scanlines" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M8 8h18v12H20v10H8zM38 8h18v34H44V20H38zM8 38h18v18H8zM38 50h18v6H38z"/><circle cx="32" cy="32" r="5"/></svg>
+        </div>
+        <div class="brand-type">
+          <strong>OPERAÇÃO <i>CAOS</i></strong>
+          <span>TACTICAL ABSURDITY DIVISION</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="season-chip"><b>TEMPORADA 01</b><span>CAOS URBANO</span></div>
+        <div class="profile-chip">
+          <div class="profile-avatar" id="profile-avatar">P</div>
+          <div class="profile-meta"><b>SGT. PASTEL</b><span>NÍVEL 27 · 4.820 XP</span></div>
+          <div class="profile-level">27</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="menu-body">
+      <div class="menu-left">
+        <div class="season-tag"><span class="pulse-dot"></span> EVENTO AO VIVO <b>GUERRA DO PASTEL</b></div>
+        <h1 class="game-title"><span>OPERAÇÃO</span><em>CAOS</em></h1>
+        <p class="game-subtitle">Esquadrões improvisados. Armas duvidosas. Consequências explosivas.<br><b>O FPS mobile mais desorganizado do mundo.</b></p>
+
+        <div class="section-label"><span>01</span> ESCOLHA O CAOS</div>
+        <div class="mode-list" id="mode-list" role="group" aria-label="Modo de jogo">
+          <button class="mode-card selected" data-mode="tdm">
+            <span class="mode-icon">◉</span>
+            <b>MATA-MATA</b>
+            <small>5 vs 5 · 25 abates</small>
+            <i class="mode-check">✓</i>
+          </button>
+          <button class="mode-card" data-mode="ffa">
+            <span class="mode-icon">✦</span>
+            <b>TODOS CONTRA TODOS</b>
+            <small>8 operadores · 15 abates</small>
+            <i class="mode-check">✓</i>
+          </button>
+          <button class="mode-card" data-mode="dom">
+            <span class="mode-icon">▲</span>
+            <b>DOMINAÇÃO</b>
+            <small>3 zonas · 150 pontos</small>
+            <i class="mode-check">✓</i>
+          </button>
+        </div>
+
+        <div class="section-label map-label"><span>02</span> SETOR DE OPERAÇÃO <button id="map-info-btn" class="mini-link" type="button">DETALHES</button></div>
+        <div class="map-strip" id="map-strip" role="group" aria-label="Mapa"></div>
+
+        <div class="play-row">
+          <button id="play-btn" class="play-btn" type="button" aria-label="Start">
+            <span class="play-chevron">▶</span>
+            <span class="play-text"><b>JOGAR</b><small id="play-sub">MATA-MATA · CIDADE ABANDONADA</small></span>
+            <span class="play-badge" id="play-count">5v5</span>
+          </button>
+          <button id="custom-btn" class="square-btn" type="button" title="Partida personalizada">
+            <span>⚙</span><small>PARTIDA<br>PERSONALIZADA</small>
+          </button>
+          <button id="how-btn" class="square-btn" type="button" title="Como jogar">
+            <span>?</span><small>COMO<br>JOGAR</small>
+          </button>
+        </div>
+      </div>
+
+      <aside class="operator-panel">
+        <div class="operator-topline">
+          <span class="tiny-label">OPERADOR SELECIONADO</span>
+          <span class="operator-id" id="char-id">#01</span>
+        </div>
+        <div class="operator-copy">
+          <div class="char-role" id="char-role">ESPECIALISTA EM CONFUSÃO</div>
+          <h2 id="char-name">SARGENTO PASTEL</h2>
+          <p id="char-bio">Herói de três guerras e zero banhos. Dizem que seu colete à prova de balas é feito de pastel. Ninguém teve coragem de testar.</p>
+          <div class="char-stats" id="char-stats">
+            <div class="stat"><span>RESISTÊNCIA</span><i><b style="width:82%"></b></i></div>
+            <div class="stat"><span>CAOS</span><i><b style="width:95%"></b></i></div>
+            <div class="stat"><span>HIGIENE</span><i><b style="width:18%"></b></i></div>
+          </div>
+          <div class="anim-buttons">
+            <button type="button" data-anim="entry">ENTRADA</button>
+            <button type="button" data-anim="win">VITÓRIA</button>
+            <button type="button" data-anim="lose">DERROTA</button>
+            <button type="button" data-anim="idle" class="active">IDLE</button>
+          </div>
+        </div>
+        <div class="operator-pager">
+          <button type="button" id="char-prev" aria-label="Operador anterior">‹</button>
+          <div class="operator-dots" id="operator-dots"></div>
+          <button type="button" id="char-next" aria-label="Próximo operador">›</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="menu-bottom">
+      <div class="loadout-strip">
+        <div class="loadout-label"><span>LOADOUT</span><b>PRIMÁRIA</b></div>
+        <button class="weapon-slot" id="loadout-btn" type="button">
+          <div class="weapon-silhouette" id="weapon-silhouette"></div>
+          <div><b id="loadout-name">TROVÃO-47</b><span id="loadout-skin">FUSIL · PELE: FERrugem</span></div>
+          <i>›</i>
+        </button>
+        <div class="loadout-divider"></div>
+        <div class="loadout-meta"><span>DANO</span><b id="loadout-dmg">72</b></div>
+        <div class="loadout-meta"><span>CADÊNCIA</span><b id="loadout-rpm">600</b></div>
+        <div class="loadout-meta"><span>MOBILIDADE</span><b id="loadout-mob">64</b></div>
+      </div>
+      <nav class="bottom-nav">
+        <button type="button" class="active">INÍCIO</button>
+        <button type="button" id="roster-btn">OPERADORES <b>12</b></button>
+        <button type="button" id="arsenal-btn">ARSENAL</button>
+        <button type="button" id="maps-btn">MAPAS</button>
+        <button type="button" id="settings-btn">AJUSTES</button>
+      </nav>
+      <div class="build-tag">BUILD 0.9.4 <span>MOBILE READY</span></div>
+    </div>
+  </section>
+
+  <!-- ============================== MODALS ============================== -->
+  <div id="modal-layer" class="modal-layer hidden">
+    <div id="modal-backdrop"></div>
+
+    <section id="roster-panel" class="modal-panel hidden" aria-label="Operadores">
+      <header class="modal-head">
+        <div><span class="tiny-label">ESCALÃO DE OPERADORES</span><h2>QUEM VAI CAUSAR O CAOS?</h2></div>
+        <div class="modal-actions"><span id="roster-count">12 OPERADORES</span><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="roster-grid" id="roster-grid"></div>
+    </section>
+
+    <section id="arsenal-panel" class="modal-panel hidden" aria-label="Arsenal">
+      <header class="modal-head">
+        <div><span class="tiny-label">ARSENAL NÃO AUTORIZADO</span><h2>ARMAS COM HISTÓRICO DUVIDOSO</h2></div>
+        <div class="modal-actions"><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="arsenal-layout">
+        <div class="weapon-grid" id="weapon-grid"></div>
+        <aside class="skin-panel">
+          <div class="skin-preview" id="skin-preview"><div class="gun-big" id="gun-big"></div><span id="skin-name">FERRUGEM</span></div>
+          <span class="tiny-label">PELE EQUIPADA</span>
+          <div class="skin-swatches" id="skin-swatches"></div>
+          <div class="weapon-stats" id="weapon-stats"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="settings-panel" class="modal-panel hidden" aria-label="Ajustes">
+      <header class="modal-head">
+        <div><span class="tiny-label">CENTRAL DE CONTROLE</span><h2>AJUSTES DE COMBATE</h2></div>
+        <div class="modal-actions"><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="settings-grid">
+        <div class="setting"><label for="sens-slider">SENSIBILIDADE <b id="sens-value">100%</b></label><input id="sens-slider" type="range" min="30" max="200" value="100"></div>
+        <div class="setting"><label>QUALIDADE GRÁFICA</label><div class="segmented" id="quality-seg"><button data-q="low">LEVE</button><button data-q="medium" class="active">MÉDIA</button><button data-q="high">ALTA</button></div></div>
+        <div class="setting"><label>ÁUDIO</label><div class="segmented" id="audio-seg"><button data-a="on" class="active">LIGADO</button><button data-a="off">DESLIGADO</button></div></div>
+        <div class="setting"><label>MIRA ASSISTIDA (TOQUE)</label><div class="segmented" id="assist-seg"><button data-as="on" class="active">LIGADA</button><button data-as="off">DESLIGADA</button></div></div>
+        <div class="setting setting-wide"><label>CONTROLES</label><p class="settings-note">Desktop: WASD para mover · mouse para mirar · clique para atirar · R recarrega · Shift corre · Espaço pula · 1/2 troca de arma · Tab placar · Esc pausa.<br>Mobile: analógico esquerdo move · arraste a direita para mirar · botões para atirar, mirar, pular e recarregar.</p></div>
+      </div>
+      <div class="modal-footer"><button class="btn-secondary" id="reset-settings" type="button">RESTAURAR PADRÕES</button><button class="btn-primary close-modal" type="button">SALVAR E VOLTAR</button></div>
+    </section>
+
+    <section id="custom-panel" class="modal-panel hidden" aria-label="Partida personalizada">
+      <header class="modal-head">
+        <div><span class="tiny-label">SALA PARTICULAR</span><h2>MONTE SEU PRÓPRIO DESASTRE</h2></div>
+        <div class="modal-actions"><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="custom-grid">
+        <div class="custom-col">
+          <span class="tiny-label">MODO</span>
+          <div class="custom-options" id="custom-modes">
+            <button data-cmode="tdm" class="active">MATA-MATA</button><button data-cmode="ffa">TODOS VS TODOS</button><button data-cmode="dom">DOMINAÇÃO</button>
+          </div>
+          <span class="tiny-label">MAPA</span>
+          <div class="custom-options custom-maps" id="custom-maps"></div>
+        </div>
+        <div class="custom-col">
+          <span class="tiny-label">TAMANHO DA SALA</span>
+          <div class="range-line"><input id="bot-range" type="range" min="3" max="9" value="5"><b id="bot-count">5 vs 5</b></div>
+          <span class="tiny-label">PONTUAÇÃO PARA VITÓRIA</span>
+          <div class="range-line"><input id="score-range" type="range" min="10" max="60" step="5" value="25"><b id="score-limit">25</b></div>
+          <span class="tiny-label">CÓDIGO DA SALA</span>
+          <div class="room-code" id="room-code">CAOS-7X9</div>
+          <p class="settings-note">Convide seus amigos compartilhando o código. Nesta build, os aliados e adversários são bots treinados em táticas absolutamente questionáveis.</p>
+        </div>
+        <div class="custom-summary">
+          <div class="summary-badge">👥</div>
+          <h3 id="custom-title">MATA-MATA</h3>
+          <p id="custom-desc">Cidade Abandonada · 5 vs 5</p>
+          <button id="custom-start" class="btn-primary" type="button">CRIAR PARTIDA</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-panel" class="modal-panel hidden" aria-label="Como jogar">
+      <header class="modal-head">
+        <div><span class="tiny-label">MANUAL DO RECRUTA</span><h2>SOBREVIVA AO PRIMEIRO MINUTO</h2></div>
+        <div class="modal-actions"><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="how-grid">
+        <div class="how-card"><b>01</b><h3>MOVA-SE</h3><p>Use o analógico esquerdo ou WASD. Corra com Shift. Fique atrás de caixas, carros e paredes — elas realmente bloqueiam tiros.</p></div>
+        <div class="how-card"><b>02</b><h3>MIRE E ATIRE</h3><p>Arraste na metade direita da tela ou use o mouse. Segure o botão de tiro. A mira fica mais precisa no ADS.</p></div>
+        <div class="how-card"><b>03</b><h3>RECARREGUE</h3><p>O pente vazio é o melhor amigo do inimigo. Toque em recarregar ou pressione R antes de entrar em cada beco.</p></div>
+        <div class="how-card"><b>04</b><h3>DOMINE</h3><p>No modo Dominação, fique dentro das zonas A, B e C para capturá-las. Cada zona controlada gera pontos para a equipe.</p></div>
+        <div class="how-card"><b>05</b><h3>USE O MAPA</h3><p>O minimapa mostra aliados, zonas e inimigos que estão atirando. Sons e indicadores vermelhos revelam de onde vem o perigo.</p></div>
+        <div class="how-card"><b>06</b><h3>SEJA ABSURDO</h3><p>Escolha entre 12 operadores, 4 armas e 4 skins. Não existe build errada. Existe build engraçada e build mais engraçada.</p></div>
+      </div>
+      <div class="modal-footer"><button class="btn-primary close-modal" type="button">ENTENDIDO, SARGENTO</button></div>
+    </section>
+
+    <section id="map-panel" class="modal-panel hidden" aria-label="Mapas">
+      <header class="modal-head">
+        <div><span class="tiny-label">INTELIGÊNCIA DE CAMPO</span><h2>SETORES DISPONÍVEIS</h2></div>
+        <div class="modal-actions"><button class="close-modal" type="button" aria-label="Fechar">✕</button></div>
+      </header>
+      <div class="map-detail-grid" id="map-detail-grid"></div>
+    </section>
+  </div>
+
+  <!-- ============================== LOADING / VERSUS ============================== -->
+  <section id="loading-screen" class="screen hidden">
+    <div class="vs-bg"></div>
+    <div class="loading-top"><span>TACTICAL ABSURDITY DIVISION</span><b id="loading-map">CIDADE ABANDONADA</b><span id="loading-mode">MATA-MATA</span></div>
+    <div class="vs-wrap">
+      <div class="vs-team vs-blue">
+        <span class="tiny-label">ESQUADRÃO VESPA</span>
+        <h2 id="vs-blue-name">SARGENTO PASTEL</h2>
+        <p>Você + 4 especialistas</p>
+      </div>
+      <div class="vs-mark">VS</div>
+      <div class="vs-team vs-orange">
+        <span class="tiny-label">ESQUADRÃO RAPOSA</span>
+        <h2>CAPITÃO CUPIM</h2>
+        <p>5 especialistas</p>
+      </div>
+    </div>
+    <div class="loading-bar"><i id="loading-fill"></i></div>
+    <div class="loading-status" id="loading-status">MOBILIZANDO OPERADORES...</div>
+    <div class="loading-tip" id="loading-tip">DICA: recarregar atrás de uma parede aumenta suas chances de continuar vivo.</div>
+  </section>
+
+  <!-- ============================== MATCH UI ============================== -->
+  <section id="match-ui" class="hidden" aria-label="Interface de combate">
+    <div id="top-hud" class="top-hud">
+      <div class="team-score blue"><span class="team-label">VESPA</span><b id="score-blue">0</b><i><em id="bar-blue"></em></i></div>
+      <div class="match-center">
+        <span id="hud-mode">MATA-MATA</span>
+        <b id="hud-timer">05:00</b>
+        <small id="hud-limit">PRIMEIRO A 25</small>
+      </div>
+      <div class="team-score orange"><i><em id="bar-orange"></em></i><b id="score-orange">0</b><span class="team-label">RAPOSA</span></div>
+      <button id="pause-btn" class="pause-btn" type="button" aria-label="Pausar">❚❚</button>
+    </div>
+
+    <div class="minimap-wrap">
+      <div class="minimap-ring"><canvas id="minimap" width="220" height="220"></canvas><span class="north">N</span></div>
+      <div class="zone-chips" id="zone-chips"></div>
+    </div>
+
+    <div id="killfeed" class="killfeed"></div>
+    <div id="objective" class="objective"></div>
+    <div id="announce" class="announce"></div>
+    <div id="hitmarker" class="hitmarker"><i></i><i></i><i></i><i></i></div>
+    <div id="damage-dirs" class="damage-dirs"></div>
+
+    <div id="crosshair" class="crosshair">
+      <i class="ch-top"></i><i class="ch-right"></i><i class="ch-bottom"></i><i class="ch-left"></i><span class="ch-dot"></span>
+    </div>
+
+    <div class="bottom-left-hud">
+      <div class="health-panel">
+        <div class="health-icon">✚</div>
+        <div class="health-main"><span>VITALIDADE</span><b id="health-value">100</b><i><em id="health-bar"></em></i></div>
+        <div class="armor-main"><span>COLETE</span><b id="armor-value">50</b></div>
+      </div>
+      <div class="ability-row">
+        <div class="ability" id="ability-sprint"><b>⇧</b><span>CORRER</span></div>
+        <div class="ability" id="ability-jump"><b>⤒</b><span>PULAR</span></div>
+      </div>
+    </div>
+
+    <div class="bottom-right-hud">
+      <div class="weapon-info"><span id="weapon-name">TROVÃO-47</span><small id="weapon-type">FUSIL DE ASSALTO</small></div>
+      <div class="ammo-panel"><b id="ammo-mag">30</b><span>/</span><i id="ammo-reserve">120</i></div>
+      <div class="ammo-bar"><em id="ammo-bar"></em></div>
+      <div class="weapon-slots"><span id="slot-primary" class="active">1 · TROVÃO</span><span id="slot-secondary">2 · VESPA-9</span></div>
+      <div class="reload-hint" id="reload-hint">R · RECARREGAR</div>
+    </div>
+
+    <div class="score-strip"><span>ABATES <b id="kills">0</b></span><span>MORTES <b id="deaths">0</b></span><span>PONTOS <b id="points">0</b></span></div>
+
+    <div id="mobile-controls" class="mobile-controls hidden">
+      <div class="joystick" id="joystick"><div class="joystick-ring"></div><div class="joystick-knob" id="joystick-knob"></div></div>
+      <div class="touch-actions">
+        <button id="btn-ads" class="touch-btn small" type="button">MIRA</button>
+        <button id="btn-jump" class="touch-btn small" type="button">⤒</button>
+        <button id="btn-reload" class="touch-btn small" type="button">⟳</button>
+        <button id="btn-fire" class="touch-btn fire" type="button"><span>◉</span><em>FOGO</em></button>
+      </div>
+      <div id="look-zone" class="look-zone" aria-hidden="true"></div>
+    </div>
+
+    <div id="countdown" class="countdown hidden"><span id="countdown-map"></span><b id="countdown-num">3</b><small>PREPARE-SE</small></div>
+
+    <div id="scoreboard" class="scoreboard hidden">
+      <header><span>PLACAR TÁTICO</span><button id="scoreboard-close" type="button">✕</button></header>
+      <div id="scoreboard-body"></div>
+    </div>
+
+    <div id="pause-menu" class="pause-menu hidden">
+      <div class="pause-panel">
+        <span class="tiny-label">COMBATE PAUSADO</span>
+        <h2>RESPIRE. O CAOS ESPERA.</h2>
+        <button id="resume-btn" class="btn-primary" type="button">CONTINUAR</button>
+        <button id="pause-settings-btn" class="btn-secondary" type="button">AJUSTES</button>
+        <button id="quit-btn" class="btn-secondary danger" type="button">ABANDONAR PARTIDA</button>
+      </div>
+    </div>
+
+    <div id="end-screen" class="end-screen hidden">
+      <div class="end-glow"></div>
+      <span class="tiny-label" id="end-kicker">OPERAÇÃO CONCLUÍDA</span>
+      <h2 id="end-title">VITÓRIA</h2>
+      <p id="end-sub">O caos foi devidamente organizado.</p>
+      <div class="end-mvp" id="end-mvp"></div>
+      <div class="end-scoreboard" id="end-scoreboard"></div>
+      <div class="end-actions">
+        <button id="rematch-btn" class="btn-primary" type="button">JOGAR DE NOVO</button>
+        <button id="menu-btn" class="btn-secondary" type="button">VOLTAR AO MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
