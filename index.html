@@ -34,51 +34,66 @@ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.se
 scene.add(new THREE.HemisphereLight(0xb9c9ff,0x211432,2));
 function area(color,intensity,pos){const l=new THREE.PointLight(color,intensity,16,2);l.position.set(...pos);scene.add(l)}area('#ff4fa3',65,[-3,4,3]);area('#53f4e3',75,[3,3,-2]);area('#ffcb6b',40,[0,5,4]);
 const mat=(color,rough=.65,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
-const skin=mat('#d58c64'),shorts=mat('#6447de',.32),stitch=mat('#a99aff',.5),topmat=mat('#29cbbb',.38),sole=mat('#f9f2ff',.4),shoe=mat('#ff4f99',.38),dark=mat('#332545');
+const skin=mat('#e6d5c7'),skinDark=mat('#dcb99a'),topmat=mat('#d9d1cb',.66),leggings=mat('#d7d2cd',.8),hair=mat('#f9e4bf',.45),shoe=mat('#f2a0c6',.55),dark=mat('#201a2d');
 const root=new THREE.Group();scene.add(root);
 function blob(parent,color,pos,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material||mat(color));m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
-function tube(parent,pts,radius,color){const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,48,radius,8,false),mat(color,.48));mesh.castShadow=true;parent.add(mesh);return mesh}
-// Legs and trainers
-const legs=[];for(const s of [-1,1]){const leg=new THREE.Group();leg.position.set(s*.48,.7,0);root.add(leg);blob(leg,'#d58c64',[0,-.55,0],[.30,.82,.31],skin);blob(leg,'#d58c64',[0,-1.13,.08],[.31,.30,.34],skin);const trainer=new THREE.Group();trainer.position.set(0,-1.34,.16);leg.add(trainer);blob(trainer,'#ff4f99',[0,0,0],[.34,.19,.53],shoe);blob(trainer,'#f9f2ff',[0,-.12,.04],[.36,.09,.55],sole);for(let i=0;i<3;i++)tube(trainer,[[-.12+i*.09,.11,.08],[-.10+i*.09,.14,.24]],.012,'#fff3fa');legs.push(leg)}
-// Waist, hips and fitted dance shorts
-const waist=new THREE.Group();waist.position.set(0,1.27,0);root.add(waist);
-blob(waist,'#d58c64',[0,.03,0],[.79,.55,.42],skin);
-blob(waist,'#6447de',[0,-.08,0],[.85,.57,.46],shorts);
-// distinct fabric panels, piping and waistband
-const band=blob(waist,'#ffda69',[0,.36,0],[.81,.105,.445],mat('#ffda69',.4));
-for(const s of [-1,1]){
-  const cheek=blob(waist,'#6447de',[s*.36,-.09,.24],[.45,.43,.30],shorts);cheek.rotation.z=s*-.10;
-  tube(waist,[[s*.02,.27,.39],[s*.23,.24,.47],[s*.50,.15,.42],[s*.69,.02,.31]],.014,'#b9adff');
-}
-tube(waist,[[0,.28,.45],[0,.05,.535],[0,-.18,.50],[0,-.34,.38]],.017,'#392c9c');
-// Sleeveless cropped dance top and shoulders
-const torso=new THREE.Group();torso.position.set(0,1.62,0);root.add(torso);
-blob(torso,'#d58c64',[0,.20,0],[.59,.66,.34],skin);
-blob(torso,'#29cbbb',[0,.45,-.005],[.66,.47,.37],topmat);
-for(const s of [-1,1]){blob(torso,'#29cbbb',[s*.52,.55,0],[.19,.25,.24],topmat);blob(torso,'#d58c64',[s*.72,.20,0],[.20,.46,.21],skin)}
-blob(torso,'#54f4e3',[0,.11,.005],[.60,.075,.36],mat('#54f4e3',.42));
-// Floor and glowing dance stage
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#19152e',.8));floor.rotation.x=-Math.PI/2;floor.position.y=-.83;floor.receiveShadow=true;scene.add(floor);
-const stage=new THREE.Mesh(new THREE.CylinderGeometry(2.35,2.5,.20,64),mat('#30235a',.35,.3));stage.position.y=-.78;stage.receiveShadow=true;stage.castShadow=true;scene.add(stage);
-const ring=new THREE.Mesh(new THREE.TorusGeometry(2.23,.035,10,100),new THREE.MeshBasicMaterial({color:'#54f4e3'}));ring.rotation.x=Math.PI/2;ring.position.y=-.66;scene.add(ring);
-const grid=new THREE.GridHelper(40,40,'#3b2e68','#272044');grid.position.y=-.665;scene.add(grid);
-// Colorful floating lights and back panels
-for(let i=0;i<20;i++){const a=i/20*Math.PI*2;const light=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),new THREE.MeshBasicMaterial({color:i%2?'#ff4fa3':'#54f4e3'}));light.position.set(Math.cos(a)*3.1,.15+Math.random()*2.2,-1.1+Math.sin(a)*.5);scene.add(light)}
-const spot=new THREE.SpotLight('#ffffff',85,18,Math.PI/5,.55,1);spot.position.set(-1,7,3);spot.target.position.set(0,1,0);spot.castShadow=true;spot.shadow.mapSize.set(1024,1024);scene.add(spot,spot.target);
-// Subtle stars in the backdrop
-const stars=new THREE.BufferGeometry(),starPos=[];for(let i=0;i<180;i++)starPos.push((Math.random()-.5)*18,Math.random()*8-1,-4-Math.random()*8);stars.setAttribute('position',new THREE.Float32BufferAttribute(starPos,3));scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:'#c7c1ff',size:.025,transparent:true,opacity:.65})));
-let bpm=112,score=0,combo=0,lastBeat=-1,soundOn=false,audioCtx=null,drag=false,lastX=0,rot=0,targetRot=0,zoom=8.2;const clock=new THREE.Clock();let elapsed=0,hitPulse=0;const scoreEl=document.getElementById('score'),comboEl=document.getElementById('combo'),toast=document.getElementById('toast'),bar=document.getElementById('beatbar');
+function oval(parent,material,w,h,d,x,y,z,ry=0){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),material);mesh.scale.set(w,h,d);mesh.position.set(x,y,z);mesh.rotation.y=ry;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
+const body=new THREE.Group();root.add(body);
+const hips=blob(body,'#e6d5c7',[0,.9,0],[.95,.9,.66],skin);
+const leftHip=blob(body,'#e6d5c7',[-.55,.95,.12],[.5,.62,.48],skin);
+const rightHip=blob(body,'#e6d5c7',[.55,.95,.12],[.5,.62,.48],skin);
+const top=blob(body,'#d9d1cb',[0,1.95,.02],[.85,.75,.55],topmat);
+const belly=blob(body,'#e6d5c7',[0,1.48,.08],[.78,.68,.48],skin);
+const leftLeg=blob(body,'#d7d2cd',[-.38,.15,0],[.38,1.08,.34],leggings);
+const rightLeg=blob(body,'#d7d2cd',[.38,.15,0],[.38,1.08,.34],leggings);
+const leftCalf=blob(body,'#d7d2cd',[-.38,-.92,.06],[.42,.72,.36],leggings);
+const rightCalf=blob(body,'#d7d2cd',[.38,-.92,.06],[.42,.72,.36],leggings);
+const leftShoe=blob(body,'#f2a0c6',[-.38,-1.62,.22],[.52,.27,.82],shoe);
+const rightShoe=blob(body,'#f2a0c6',[.38,-1.62,.22],[.52,.27,.82],shoe);
+const leftShoeTop=blob(body,'#f9f1f7',[-.38,-1.47,.38],[.4,.12,.6],mat('#f9f1f7',.6));
+const rightShoeTop=blob(body,'#f9f1f7',[.38,-1.47,.38],[.4,.12,.6],mat('#f9f1f7',.6));
+const head=blob(body,'#e6d5c7',[0,3.2,.02],[.73,.76,.7],skin);
+const neck=blob(body,'#e6d5c7',[0,2.55,.04],[.2,.22,.18],skinDark);
+const hairCap=blob(body,'#f9e4bf',[0,3.62,.08],[.87,.78,.82],hair);
+const fringe=blob(body,'#f9e4bf',[0,3.2,-.15],[.62,.28,.4],hair);
+const leftBraid=blob(body,'#f9e4bf',[-.72,3.15,.12],[.18,.9,.18],hair);leftBraid.rotation.z=-.35;const rightBraid=blob(body,'#f9e4bf',[.72,3.15,.12],[.18,.9,.18],hair);rightBraid.rotation.z=.35;
+const face=blob(body,'#e6d5c7',[0,3.15,-.02],[.7,.75,.72],skin);
+const nose=blob(body,'#e6d5c7',[0,3.1,.52],[.08,.12,.08],skinDark);
+const leftEye=blob(body,'#2b1f2b',[-.17,3.22,.55],[.07,.11,.06],mat('#2d2128',.1));
+const rightEye=blob(body,'#2b1f2b',[.17,3.22,.55],[.07,.11,.06],mat('#2d2128',.1));
+const leftCheek=blob(body,'#e7b3b9',[-.28,3.05,.58],[.08,.06,.05],mat('#dfa2aa',.2));
+const rightCheek=blob(body,'#e7b3b9',[.28,3.05,.58],[.08,.06,.05],mat('#dfa2aa',.2));
+const lips=blob(body,'#c4828f',[0,2.93,.58],[.18,.08,.08],mat('#d07d92',.25));
+const leftArm=blob(body,'#e6d5c7',[-1.1,2.1,.04],[.22,.82,.22],skinDark);leftArm.rotation.z=-.35;const rightArm=blob(body,'#e6d5c7',[1.1,2.1,.04],[.22,.82,.22],skinDark);rightArm.rotation.z=.35;
+const leftGlute=blob(body,'#e6d5c7',[-.34,1.1,.32],[.55,.56,.4],skin);leftGlute.scale.y=1.18; const rightGlute=blob(body,'#e6d5c7',[.34,1.1,.32],[.55,.56,.4],skin);rightGlute.scale.y=1.18;
+const leftButt=blob(body,'#e6d5c7',[-.52,1.08,.46],[.56,.8,.52],skin);const rightButt=blob(body,'#e6d5c7',[.52,1.08,.46],[.56,.8,.52],skin);
+const waistBand=blob(body,'#e0d9cf',[0,1.7,.12],[.8,.15,.5],mat('#ece5dd',.5));
+const hipsShadow=blob(body,'#d6d0d6',[0,0.34,.3],[1.1,.18,.9],mat('#d6d0d6',.5));
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#151220',.8));floor.rotation.x=-Math.PI/2;floor.position.y=-1.75;floor.receiveShadow=true;scene.add(floor);
+const stage=new THREE.Mesh(new THREE.CylinderGeometry(2.9,3.1,.22,64),mat('#201727',.32,.2));stage.position.y=-1.64;stage.receiveShadow=true;stage.castShadow=true;scene.add(stage);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(2.5,.028,12,100),new THREE.MeshBasicMaterial({color:'#ff8fd4'}));ring.rotation.x=Math.PI/2;ring.position.y=-1.52;scene.add(ring);
+const glow=new THREE.Mesh(new THREE.CircleGeometry(3.2,64),new THREE.MeshBasicMaterial({color:'#1f1a2e',transparent:true,opacity:.9}));glow.rotation.x=-Math.PI/2;glow.position.y=-1.51;scene.add(glow);
+scene.add(new THREE.AmbientLight(0xffffff,.35));
+const spot=new THREE.SpotLight('#ffffff',60,18,Math.PI/4,.55,1);spot.position.set(0,8,5);spot.target.position.set(0,2,0);spot.castShadow=true;spot.shadow.mapSize.set(1024,1024);scene.add(spot,spot.target);
+const glowPads=[];for(let i=0;i<18;i++){const a=i/18*Math.PI*2;const p=new THREE.Mesh(new THREE.SphereGeometry(.08,16,12),new THREE.MeshBasicMaterial({color:i%2? '#ff80bf':'#80f3dd'}));p.position.set(Math.cos(a)*4.2,1.4+Math.sin(a*2)*.9,-0.5+Math.sin(a)*2);scene.add(p);glowPads.push(p)}
+let bpm=112,score=0,combo=0,soundOn=false,audioCtx=null,drag=false,lastX=0,rot=0,targetRot=0,zoom=7.7;const clock=new THREE.Clock();let elapsed=0,hitPulse=0;const scoreEl=document.getElementById('score'),comboEl=document.getElementById('combo'),toast=document.getElementById('toast'),bar=document.getElementById('beatbar');
 function ping(freq=500,dur=.08){if(!soundOn)return;try{audioCtx ||=new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.08,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur)}catch(e){}}
 function danceHit(){const period=60/bpm,phase=((elapsed%period)/period),offset=Math.min(phase,1-phase)*period;let quality=offset<.09?'PERFEITO!':offset<.17?'NO RITMO!':'BOA!';const points=offset<.09?100:offset<.17?65:25;combo++;score+=points+Math.min(combo*2,50);scoreEl.textContent=String(score).padStart(4,'0');comboEl.textContent='COMBO ×'+combo;toast.textContent=quality;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),430);hitPulse=1;ping(quality==='PERFEITO!'?740:540,.12);if(combo%5===0)ping(980,.18)}
 document.getElementById('hit').addEventListener('click',danceHit);window.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();danceHit()}});
 document.getElementById('tempo').onclick=()=>{bpm=bpm>=148?88:bpm+10;document.getElementById('bpm').textContent=bpm};document.getElementById('sound').onclick=e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'♫ SOM: ON':'♪ SOM: OFF';ping(660)};
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(drag){targetRot+=(e.clientX-lastX)*.006;lastX=e.clientX}});renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('wheel',e=>{zoom=THREE.MathUtils.clamp(zoom+e.deltaY*.008,6,11)});
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;const beatLen=60/bpm,phase=(elapsed%beatLen)/beatLen;bar.style.transform=`translateX(${phase*330-100}%)`;
- const wave=Math.sin(elapsed*Math.PI*2*(bpm/60));const quick=Math.sin(elapsed*Math.PI*4*(bpm/60));const kick=Math.max(0,1-phase*4);
- waist.position.y=1.27+.045*Math.abs(wave)+hitPulse*.08;waist.rotation.y=Math.sin(elapsed*3.3)*.10+quick*.035;waist.rotation.z=Math.sin(elapsed*2.7)*.055;waist.scale.z=1+Math.abs(wave)*.035+hitPulse*.06;
- torso.rotation.z=Math.sin(elapsed*2.7+.5)*.045;torso.rotation.y=-waist.rotation.y*.55;root.position.y=.035*Math.sin(elapsed*Math.PI*2*(bpm/60))+.035+hitPulse*.07;
- legs[0].rotation.z=.055*Math.sin(elapsed*2.7);legs[1].rotation.z=-.055*Math.sin(elapsed*2.7);legs[0].rotation.x=.045*Math.sin(elapsed*4);legs[1].rotation.x=-.045*Math.sin(elapsed*4);
- hitPulse=Math.max(0,hitPulse-dt*2.8);rot+=(targetRot-rot)*.08;camera.position.x=Math.sin(rot)*zoom*.10;camera.position.z=zoom;camera.lookAt(0,1.15,0);camera.position.z=zoom;renderer.render(scene,camera)}animate();
+ const wave=Math.sin(elapsed*Math.PI*2*(bpm/60));const sway=Math.sin(elapsed*2.25);const bounce=Math.abs(wave);const bootyWiggle=Math.sin(elapsed*7.5)*.2;
+ body.position.y=-.45 + Math.abs(wave)*.18 + hitPulse*.08;
+ body.rotation.z=sway*.08;
+ body.rotation.y=Math.sin(elapsed*1.3)*.18;
+ leftHip.rotation.z=0.12+bootyWiggle; rightHip.rotation.z=-0.12-bootyWiggle;
+ leftButt.scale.x=1.02+Math.abs(wave)*.16; rightButt.scale.x=1.02+Math.abs(wave)*.16; leftButt.scale.y=1.18+Math.abs(wave)*.12; rightButt.scale.y=1.18+Math.abs(wave)*.12;
+ leftLeg.rotation.x=.04*Math.sin(elapsed*3.5); rightLeg.rotation.x=-.04*Math.sin(elapsed*3.5);
+ leftCalf.rotation.x=.1*Math.sin(elapsed*3.5+1.1); rightCalf.rotation.x=-.1*Math.sin(elapsed*3.5+1.1);
+ head.rotation.z=Math.sin(elapsed*2.7)*.06;
+ for(const p of glowPads){p.position.y=1.1+Math.sin(elapsed*2.2+p.position.x)*.8;}
+ hitPulse=Math.max(0,hitPulse-dt*2.8);rot+=(targetRot-rot)*.08;camera.position.x=Math.sin(rot)*zoom*.12;camera.position.z=zoom;camera.lookAt(0,2.2,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
 </script>
 </body>
