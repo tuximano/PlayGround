@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070b1a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%2367f5e1' d='m16 1 4.2 10.8L31 16l-10.8 4.2L16 31l-4.2-10.8L1 16l10.8-4.2z'/%3E%3C/svg%3E">
+  <title>Starfall — Orbital Run</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    :root { color-scheme: dark; --ink:#f4f4ff; --muted:#8d91b5; --cyan:#67f5e1; --pink:#ff6ba7; --line:rgba(187,203,255,.13); }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; background:#070b1a; color:var(--ink); font-family:'Space Grotesk',sans-serif; }
+    body { min-height:100svh; display:grid; place-items:center; overflow-x:hidden; padding:24px; background:radial-gradient(ellipse at 50% 43%,#111b36 0%,#090e20 44%,#050813 100%); }
+    button { font:inherit; color:inherit; }
+    .shell { width:min(1120px,100%); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; margin:0 0 16px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand-mark { width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(103,245,225,.42);border-radius:13px;background:linear-gradient(145deg,rgba(103,245,225,.16),rgba(103,245,225,.02));box-shadow:0 0 28px rgba(103,245,225,.09); }
+    .brand-mark svg { width:23px;filter:drop-shadow(0 0 6px rgba(103,245,225,.6)); }
+    .brand-title { font-size:15px;line-height:1;font-weight:700;letter-spacing:.16em; }
+    .brand-sub { margin-top:5px;color:var(--muted);font:10px 'DM Mono',monospace;letter-spacing:.14em; }
+    .top-actions { display:flex;gap:8px; }
+    .icon-btn { width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);display:grid;place-items:center;cursor:pointer;transition:.2s; }
+    .icon-btn:hover { border-color:rgba(103,245,225,.45);background:rgba(103,245,225,.08); }
+    .icon-btn svg { width:17px;height:17px; }
+    .game-card { border:1px solid rgba(174,194,255,.16);border-radius:22px;overflow:hidden;background:#080d1c;box-shadow:0 28px 90px rgba(0,0,0,.45),0 0 80px rgba(60,106,210,.08); }
+    .hud { display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:15px 23px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(15,23,47,.97),rgba(10,15,31,.97)); }
+    .stat-label { color:#8d94b7;font:9px 'DM Mono',monospace;letter-spacing:.17em;text-transform:uppercase; }
+    .stat-value { margin-top:3px;font-size:19px;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums; }
+    .stat-center { text-align:center; }
+    .stat-right { text-align:right; }
+    .best-line { color:#aab0d1;font:10px 'DM Mono',monospace;margin-top:3px; }
+    .best-line span { color:var(--cyan); }
+    .heart-row { display:flex;justify-content:flex-end;gap:4px;margin-top:5px; }
+    .heart { color:var(--pink);font-size:13px;filter:drop-shadow(0 0 5px rgba(255,107,167,.45)); }
+    .heart.off { opacity:.2;filter:none; }
+    .stage { position:relative;aspect-ratio:3/2;max-height:68vh;min-height:320px;background:#080d1c;overflow:hidden;touch-action:none; }
+    canvas { position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none; }
+    .overlay { position:absolute;inset:0;display:grid;place-items:center;padding:22px;background:linear-gradient(180deg,rgba(5,8,19,.14),rgba(5,8,19,.68));transition:opacity .25s; }
+    .overlay.hidden { opacity:0;pointer-events:none; }
+    .panel { width:min(440px,100%);text-align:center;padding:29px 30px 25px;border:1px solid rgba(186,204,255,.18);border-radius:20px;background:linear-gradient(145deg,rgba(18,27,53,.91),rgba(9,14,30,.94));box-shadow:0 20px 70px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.05);backdrop-filter:blur(14px); }
+    .eyebrow { color:var(--cyan);font:10px 'DM Mono',monospace;letter-spacing:.24em;text-transform:uppercase; }
+    h1 { margin:9px 0 8px;font-size:clamp(35px,6vw,57px);line-height:.98;letter-spacing:-.065em; }
+    h1 em { color:var(--cyan);font-style:normal;text-shadow:0 0 26px rgba(103,245,225,.3); }
+    .intro { max-width:330px;margin:12px auto 21px;color:#a8aecb;font-size:13px;line-height:1.55; }
+    .primary { min-height:48px;padding:0 25px;border:0;border-radius:12px;background:var(--cyan);color:#07141a;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;box-shadow:0 7px 25px rgba(103,245,225,.18);transition:transform .18s,box-shadow .18s; }
+    .primary:hover { transform:translateY(-2px);box-shadow:0 10px 30px rgba(103,245,225,.31); }
+    .secondary { min-height:42px;padding:0 20px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.04);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer; }
+    .secondary:hover { border-color:rgba(103,245,225,.4); }
+    .key-hints { display:flex;justify-content:center;gap:17px;margin-top:19px;color:#969dbd;font:9px 'DM Mono',monospace;letter-spacing:.06em; }
+    kbd { display:inline-grid;place-items:center;min-width:20px;height:19px;padding:0 4px;margin-right:4px;border:1px solid rgba(197,209,255,.22);border-radius:5px;background:rgba(255,255,255,.06);color:#edf2ff;font:10px 'DM Mono',monospace; }
+    .controls { display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-top:1px solid var(--line);background:rgba(10,15,31,.98); }
+    .control-copy { color:#9097b8;font-size:11px; }
+    .control-copy strong { color:#e1e5fa;font-weight:600; }
+    .dash-hint { display:flex;align-items:center;gap:8px;color:#9da4c4;font:10px 'DM Mono',monospace; }
+    .dash-chip { padding:5px 8px;border:1px solid rgba(255,107,167,.24);border-radius:6px;color:#ff9ac2;background:rgba(255,107,167,.07);cursor:pointer;font:10px 'DM Mono',monospace;white-space:nowrap; }
+    .dash-chip:not(:disabled):hover { border-color:rgba(255,107,167,.58);background:rgba(255,107,167,.14); }
+    .dash-chip:disabled { opacity:.62;cursor:default; }
+    .progress-track { height:2px;background:rgba(255,255,255,.04); }
+    .progress-fill { width:0;height:100%;background:linear-gradient(90deg,#67f5e1,#b7ff99);box-shadow:0 0 10px #67f5e1;transition:width .1s linear; }
+    .footer { display:flex;justify-content:space-between;align-items:center;padding:12px 3px 0;color:#707796;font:9px 'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase; }
+    .footer span:last-child { color:#858cad; }
+    @media(max-width:600px) {
+      body { padding:12px;align-items:start; }
+      .shell { margin:auto 0; }
+      .topbar { margin-bottom:11px; }
+      .brand-mark { width:36px;height:36px;border-radius:11px; }
+      .brand-title { font-size:13px; }
+      .brand-sub { font-size:9px; }
+      .icon-btn { width:36px;height:36px; }
+      .game-card { border-radius:17px; }
+      .hud { padding:12px 14px; }
+      .stat-value { font-size:17px; }
+      .stage { min-height:340px;max-height:66svh;aspect-ratio:1/1; }
+      .controls { padding:12px 14px; }
+      .control-copy { font-size:10px; }
+      .dash-hint { font-size:9px; }
+      .panel { padding:25px 19px 21px; }
+      .intro { font-size:12px; }
+      .key-hints { gap:8px;font-size:8px; }
+      .footer { font-size:8px; }
+    }
+    @media(max-height:700px) and (min-width:601px) { body{padding:12px}.stage{max-height:61vh}.hud{padding:10px 20px}.controls{padding:10px 20px}.topbar{margin-bottom:10px} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 14.4 9.6 21.2 12l-6.8 2.4L12 21.2l-2.4-6.8L2.8 12l6.8-2.4L12 2.8Z" stroke="#67f5e1" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="#67f5e1"/></svg></div>
+        <div><div class="brand-title">STARFALL</div><div class="brand-sub">ORBITAL RUN // SECTOR 07</div></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" aria-label="Toggle sound" title="Toggle sound"><svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+        <button class="icon-btn" id="pauseBtn" aria-label="Pause game" title="Pause game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></svg></button>
+      </div>
+    </header>
+    <section class="game-card" aria-label="Starfall arcade game">
+      <div class="hud">
+        <div><div class="stat-label">Flight score</div><div class="stat-value" id="score">00000</div></div>
+        <div class="stat-center"><div class="stat-label">Energy shards</div><div class="stat-value" id="shards">◇ 00</div></div>
+        <div class="stat-right"><div class="stat-label">Hull integrity</div><div class="heart-row" id="hearts"></div></div>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="game" aria-label="Game area"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="panel" id="panel">
+            <div class="eyebrow" id="eyebrow">A signal in the dark</div>
+            <h1 id="title">STAR<em>FALL</em></h1>
+            <p class="intro" id="intro">Thread the asteroid field. Collect lost energy shards and see how long your little ship can outrun the void.</p>
+            <button class="primary" id="startBtn">Launch mission</button>
+            <div class="key-hints"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> fly</span><span><kbd>SPACE</kbd> phase dash</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="dashProgress"></div></div>
+      <div class="controls"><div class="control-copy"><strong>Steer</strong> with keys or drag anywhere in the flight zone</div><div class="dash-hint"><span>PHASE DASH</span><button class="dash-chip" id="dashBtn" aria-label="Phase dash" disabled>SPACE / READY</button></div></div>
+    </section>
+    <div class="footer"><span>One pilot. One impossible run.</span><span>Best flight <b id="best">00000</b></span></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
