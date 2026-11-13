@@ -95,6 +95,38 @@ blob(partner,'#171321',[.38,3.03,-.12],[.16,.63,.17],partnerHair).rotation.z=-.1
 blob(partner,'#171321',[.48,2.56,-.1],[.13,.48,.14],partnerHair).rotation.z=-.12;
 blob(partner,'#25152b',[-.14,3.08,.51],[.055,.09,.045],partnerEye);blob(partner,'#25152b',[.14,3.08,.51],[.055,.09,.045],partnerEye);
 blob(partner,'#ff75c8',[0,2.86,.52],[.12,.045,.04],mat('#d66a9d',.3));
+// Terceira dançarina adulta: look de palco com top, shorts e detalhes metálicos.
+const thirdRoot=new THREE.Group();thirdRoot.position.set(-2.05,0,.15);thirdRoot.scale.setScalar(.76);scene.add(thirdRoot);
+const third=new THREE.Group();thirdRoot.add(third);
+const thirdSkin=mat('#a96852',.62),thirdSkinLight=mat('#c98568',.58),thirdHair=mat('#251526',.3,.05);
+const stageTop=mat('#e62478',.32,.16),stageTrim=mat('#ffd36a',.26,.55),stageShorts=mat('#351d53',.38,.22),stageBoots=mat('#21162e',.25,.25);
+blob(third,'#a96852',[0,.98,0],[.67,.82,.48],thirdSkin);
+blob(third,'#a96852',[0,1.88,0],[.52,.68,.34],thirdSkin);
+// Cropped performance top, with structured cups, straps, and gold edging.
+blob(third,'#e62478',[0,1.72,.17],[.53,.22,.34],stageTop);
+blob(third,'#e62478',[-.22,2.02,.21],[.25,.24,.25],stageTop);blob(third,'#e62478',[.22,2.02,.21],[.25,.24,.25],stageTop);
+blob(third,'#ffd36a',[0,1.72,.47],[.055,.15,.035],stageTrim);
+const thirdStrapL=blob(third,'#e62478',[-.38,2.2,.06],[.075,.28,.09],stageTop);thirdStrapL.rotation.z=-.42;
+const thirdStrapR=blob(third,'#e62478',[.38,2.2,.06],[.075,.28,.09],stageTop);thirdStrapR.rotation.z=.42;
+blob(third,'#ffd36a',[0,1.49,.08],[.68,.09,.43],stageTrim);
+// High-waisted shorts and gold side piping keep the outfit stage-ready.
+blob(third,'#351d53',[0,1.12,.02],[.69,.42,.49],stageShorts);
+blob(third,'#ffd36a',[-.66,1.12,.04],[.045,.35,.08],stageTrim);blob(third,'#ffd36a',[.66,1.12,.04],[.045,.35,.08],stageTrim);
+const thirdLegL=blob(third,'#a96852',[-.31,.28,0],[.25,.78,.28],thirdSkin);const thirdLegR=blob(third,'#a96852',[.31,.28,0],[.25,.78,.28],thirdSkin);
+blob(third,'#21162e',[-.31,-.85,.02],[.29,.43,.32],stageBoots);blob(third,'#21162e',[.31,-.85,.02],[.29,.43,.32],stageBoots);
+blob(third,'#ffd36a',[-.31,-.53,.29],[.3,.055,.045],stageTrim);blob(third,'#ffd36a',[.31,-.53,.29],[.3,.055,.045],stageTrim);
+const thirdArmL=blob(third,'#a96852',[-.77,1.83,.02],[.17,.65,.19],thirdSkinLight);thirdArmL.rotation.z=-.32;
+const thirdArmR=blob(third,'#a96852',[.77,1.83,.02],[.17,.65,.19],thirdSkinLight);thirdArmR.rotation.z=.32;
+blob(third,'#ffd36a',[-.82,1.36,.06],[.19,.075,.2],stageTrim);blob(third,'#ffd36a',[.82,1.36,.06],[.19,.075,.2],stageTrim);
+blob(third,'#a96852',[0,2.42,.02],[.16,.22,.16],thirdSkinLight);
+const thirdHead=blob(third,'#a96852',[0,2.98,.02],[.51,.59,.48],thirdSkinLight);
+blob(third,'#251526',[0,3.35,-.04],[.62,.42,.55],thirdHair);
+blob(third,'#251526',[-.42,2.99,-.12],[.15,.62,.16],thirdHair).rotation.z=.15;
+blob(third,'#251526',[.43,2.98,-.12],[.15,.62,.16],thirdHair).rotation.z=-.15;
+blob(third,'#251526',[.57,2.53,-.12],[.12,.5,.13],thirdHair).rotation.z=-.2;
+blob(third,'#2b1721',[-.14,3.01,.45],[.05,.08,.04],partnerEye);blob(third,'#2b1721',[.14,3.01,.45],[.05,.08,.04],partnerEye);
+blob(third,'#7f3544',[0,2.79,.45],[.13,.045,.04],mat('#8e4050',.32));
+blob(third,'#ffd36a',[0,2.33,.2],[.19,.055,.06],stageTrim);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#151220',.8));floor.rotation.x=-Math.PI/2;floor.position.y=-1.75;floor.receiveShadow=true;scene.add(floor);
 const stage=new THREE.Mesh(new THREE.CylinderGeometry(2.9,3.1,.22,64),mat('#201727',.32,.2));stage.position.y=-1.64;stage.receiveShadow=true;stage.castShadow=true;scene.add(stage);
 const ring=new THREE.Mesh(new THREE.TorusGeometry(2.5,.028,12,100),new THREE.MeshBasicMaterial({color:'#ff8fd4'}));ring.rotation.x=Math.PI/2;ring.position.y=-1.52;scene.add(ring);
@@ -122,6 +154,15 @@ function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDel
  partnerLeftLeg.rotation.x=.08*Math.sin(elapsed*3.5+.5);
  partnerRightLeg.rotation.x=-.08*Math.sin(elapsed*3.5+.5);
  partnerHead.rotation.z=Math.sin(elapsed*2.5+.4)*.045;
+ // Original choreography: shoulder accents, arm waves, and alternating steps.
+ const thirdBeat=Math.sin(elapsed*Math.PI*2*(bpm/60)+1.1),thirdSway=Math.sin(elapsed*2.7+.3);
+ third.position.y=-.45+Math.abs(thirdBeat)*.17+hitPulse*.06;
+ third.rotation.z=thirdSway*.065;third.rotation.y=Math.sin(elapsed*1.35+.7)*.16;
+ thirdArmL.rotation.z=-.32+Math.sin(elapsed*3.2+.4)*.38;
+ thirdArmR.rotation.z=.32-Math.sin(elapsed*3.2+1.4)*.38;
+ thirdArmL.rotation.x=.18*Math.sin(elapsed*2.2);thirdArmR.rotation.x=-.18*Math.sin(elapsed*2.2+.8);
+ thirdLegL.rotation.x=.13*Math.sin(elapsed*3.5+1);thirdLegR.rotation.x=-.13*Math.sin(elapsed*3.5+1);
+ thirdHead.rotation.z=Math.sin(elapsed*2.6+.6)*.05;
  leftHip.rotation.z=0.12+bootyWiggle; rightHip.rotation.z=-0.12-bootyWiggle;
  leftButt.scale.x=1.02+Math.abs(wave)*.16; rightButt.scale.x=1.02+Math.abs(wave)*.16; leftButt.scale.y=1.18+Math.abs(wave)*.12; rightButt.scale.y=1.18+Math.abs(wave)*.12;
  leftLeg.rotation.x=.04*Math.sin(elapsed*3.5); rightLeg.rotation.x=-.04*Math.sin(elapsed*3.5);
