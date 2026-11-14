@@ -21,7 +21,7 @@
  </div>
  <div class="bottom">
   <div><div class="controls"><button class="hit" id="hit">✦ REBOLAR <span style="opacity:.75">[ESPAÇO]</span></button><button class="control" id="tempo">♫ <span id="bpm">112</span> BPM</button><button class="control" id="sound">♪ SOM: OFF</button></div><div class="beat"><i id="beatbar"></i></div></div>
-  <div class="hint">Acerte no pulso para ganhar pontos<br><b>ESPAÇO</b> ou clique para dançar<br><span class="bpm">ARRASTE PARA GIRAR A CÂMERA</span></div>
+  <div class="hint">Acerte no pulso para ganhar pontos<br><b>ESPAÇO</b> ou clique para dançar<br><span class="bpm">ÓRBITA AUTOMÁTICA · ARRASTE PARA AJUSTAR</span></div>
  </div>
 </div>
 <div class="camera-control"><label for="cameraZoom"><span>CÂMERA · ZOOM</span><output id="zoomValue">15.5</output></label><input id="cameraZoom" type="range" min="7" max="20" step="0.5" value="15.5" aria-label="Ajustar distância da câmera"></div>
@@ -35,66 +35,79 @@ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.se
 scene.add(new THREE.HemisphereLight(0xb9c9ff,0x211432,2));
 function area(color,intensity,pos){const l=new THREE.PointLight(color,intensity,16,2);l.position.set(...pos);scene.add(l)}area('#ff4fa3',65,[-3,4,3]);area('#53f4e3',75,[3,3,-2]);area('#ffcb6b',40,[0,5,4]);area('#ff4fa3',35,[2.2,3,2]);area('#a64dff',42,[2,3,1]);
 const mat=(color,rough=.65,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
-const skin=mat('#e6d5c7'),skinDark=mat('#dcb99a'),topmat=mat('#d9d1cb',.66),leggings=mat('#d7d2cd',.8),hair=mat('#f9e4bf',.45),shoe=mat('#f2a0c6',.55),dark=mat('#201a2d');
-const root=new THREE.Group();scene.add(root);
-function blob(parent,color,pos,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material||mat(color));m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+const skin=mat('#e9cdbd',.72),skinDark=mat('#c99e8b',.72),topmat=mat('#f4edf1',.38,.08),leggings=mat('#5d315f',.42,.12),hair=mat('#fff8f1',.32),shoe=mat('#fa77bd',.35,.12),dark=mat('#201a2d');
+const root=new THREE.Group();root.position.x=-1.05;scene.add(root);
+function blob(parent,color,pos,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,40,32),material||mat(color));m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function oval(parent,material,w,h,d,x,y,z,ry=0){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),material);mesh.scale.set(w,h,d);mesh.position.set(x,y,z);mesh.rotation.y=ry;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
+function profileMesh(parent,material,profile,segments=48,bust=0){const vertices=[],indices=[];for(const [y,rx,rz] of profile){for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,x=Math.cos(a)*rx,front=Math.max(0,Math.sin(a));const contour=bust*Math.exp(-((Math.abs(x)-.3)**2/.025+(y-1.98)**2/.045))*front**4;vertices.push(x,y,Math.sin(a)*rz+contour)}}for(let r=0;r<profile.length-1;r++)for(let i=0;i<segments;i++){const a=r*segments+i,b=r*segments+(i+1)%segments,c=(r+1)*segments+i,d=(r+1)*segments+(i+1)%segments;indices.push(a,c,b,b,c,d)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
+function line(parent,points,radius,material){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,24,radius,8,false),material);mesh.castShadow=true;parent.add(mesh);return mesh}
 const body=new THREE.Group();root.add(body);
-const hips=blob(body,'#e6d5c7',[0,.9,0],[.95,.9,.66],skin);
-const leftHip=blob(body,'#e6d5c7',[-.55,.95,.12],[.5,.62,.48],skin);
-const rightHip=blob(body,'#e6d5c7',[.55,.95,.12],[.5,.62,.48],skin);
-const top=blob(body,'#d9d1cb',[0,1.95,.02],[.85,.75,.55],topmat);
-blob(body,'#d9d1cb',[-.34,2.08,.42],[.4,.34,.28],topmat);blob(body,'#d9d1cb',[.34,2.08,.42],[.4,.34,.28],topmat);
-const belly=blob(body,'#e6d5c7',[0,1.48,.08],[.78,.68,.48],skin);
-const leftLeg=blob(body,'#d7d2cd',[-.38,.15,0],[.38,1.08,.34],leggings);
-const rightLeg=blob(body,'#d7d2cd',[.38,.15,0],[.38,1.08,.34],leggings);
-const leftCalf=blob(body,'#d7d2cd',[-.38,-.92,.06],[.42,.72,.36],leggings);
-const rightCalf=blob(body,'#d7d2cd',[.38,-.92,.06],[.42,.72,.36],leggings);
-const leftShoe=blob(body,'#f2a0c6',[-.38,-1.62,.22],[.52,.27,.82],shoe);
-const rightShoe=blob(body,'#f2a0c6',[.38,-1.62,.22],[.52,.27,.82],shoe);
-const leftShoeTop=blob(body,'#f9f1f7',[-.38,-1.47,.38],[.4,.12,.6],mat('#f9f1f7',.6));
-const rightShoeTop=blob(body,'#f9f1f7',[.38,-1.47,.38],[.4,.12,.6],mat('#f9f1f7',.6));
-const head=blob(body,'#e6d5c7',[0,3.2,.02],[.73,.76,.7],skin);
-const neck=blob(body,'#e6d5c7',[0,2.55,.04],[.2,.22,.18],skinDark);
-const hairCap=blob(body,'#f9e4bf',[0,3.62,.08],[.87,.78,.82],hair);
-const fringe=blob(body,'#f9e4bf',[0,3.2,-.15],[.62,.28,.4],hair);
-const leftBraid=blob(body,'#f9e4bf',[-.72,3.15,.12],[.18,.9,.18],hair);leftBraid.rotation.z=-.35;const rightBraid=blob(body,'#f9e4bf',[.72,3.15,.12],[.18,.9,.18],hair);rightBraid.rotation.z=.35;
-const face=blob(body,'#e6d5c7',[0,3.15,-.02],[.7,.75,.72],skin);
-const nose=blob(body,'#e6d5c7',[0,3.1,.52],[.08,.12,.08],skinDark);
-const leftEye=blob(body,'#2b1f2b',[-.17,3.22,.55],[.07,.11,.06],mat('#2d2128',.1));
-const rightEye=blob(body,'#2b1f2b',[.17,3.22,.55],[.07,.11,.06],mat('#2d2128',.1));
-const leftCheek=blob(body,'#e7b3b9',[-.28,3.05,.58],[.08,.06,.05],mat('#dfa2aa',.2));
-const rightCheek=blob(body,'#e7b3b9',[.28,3.05,.58],[.08,.06,.05],mat('#dfa2aa',.2));
-const lips=blob(body,'#c4828f',[0,2.93,.58],[.18,.08,.08],mat('#d07d92',.25));
-const leftArm=blob(body,'#e6d5c7',[-1.1,2.1,.04],[.22,.82,.22],skinDark);leftArm.rotation.z=-.35;const rightArm=blob(body,'#e6d5c7',[1.1,2.1,.04],[.22,.82,.22],skinDark);rightArm.rotation.z=.35;
-const leftGlute=blob(body,'#e6d5c7',[-.34,1.1,.32],[.55,.56,.4],skin);leftGlute.scale.y=1.18; const rightGlute=blob(body,'#e6d5c7',[.34,1.1,.32],[.55,.56,.4],skin);rightGlute.scale.y=1.18;
-const leftButt=blob(body,'#e6d5c7',[-.52,1.08,.46],[.56,.8,.52],skin);const rightButt=blob(body,'#e6d5c7',[.52,1.08,.46],[.56,.8,.52],skin);
-const waistBand=blob(body,'#e0d9cf',[0,1.7,.12],[.8,.15,.5],mat('#ece5dd',.5));
-const hipsShadow=blob(body,'#d6d0d6',[0,0.34,.3],[1.1,.18,.9],mat('#d6d0d6',.5));
-// Dancer secundária: macacão e botas com acabamento brilhante de látex.
-const partnerRoot=new THREE.Group();partnerRoot.position.set(1.95,0,.1);partnerRoot.rotation.y=Math.PI;partnerRoot.scale.setScalar(.82);scene.add(partnerRoot);
+// Silhueta contínua sob o figurino e roupa de pista ajustada, com costuras luminosas.
+const hips=blob(body,'#5d315f',[0,.95,0],[.84,.61,.48],leggings);
+const leftHip=blob(body,'#5d315f',[-.46,.96,-.2],[.49,.55,.4],leggings),rightHip=blob(body,'#5d315f',[.46,.96,-.2],[.49,.55,.4],leggings);
+const leftGlute=leftHip,rightGlute=rightHip;
+const leftButt=blob(body,'#5d315f',[-.43,.95,-.38],[.48,.55,.37],leggings),rightButt=blob(body,'#5d315f',[.43,.95,-.38],[.48,.55,.37],leggings);
+profileMesh(body,topmat,[[1.42,.53,.32],[1.58,.5,.31],[1.78,.58,.35],[1.98,.73,.4],[2.2,.76,.37],[2.4,.5,.28],[2.48,.37,.24]],48,.065);
+// Volume discreto integrado ao top opaco, sem peças esféricas sobrepostas.
+const top=blob(body,'#f4edf1',[0,1.95,.01],[.01,.01,.01],topmat),belly=blob(body,'#e9cdbd',[0,1.5,0],[.01,.01,.01],skin);
+line(body,[[-.56,1.72,.32],[-.3,1.67,.39],[0,1.65,.4],[.3,1.67,.39],[.56,1.72,.32]],.025,mat('#ff85c9',.32,.15));
+const waistBand=blob(body,'#f6dce9',[0,1.39,.02],[.59,.1,.36],mat('#f6dce9',.36,.1));
+const hipsShadow=blob(body,'#ff73bb',[0,.42,.3],[.95,.035,.025],mat('#ff73bb',.3,.2));
+const leftLeg=blob(body,'#5d315f',[-.38,.12,0],[.36,1.02,.34],leggings),rightLeg=blob(body,'#5d315f',[.38,.12,0],[.36,1.02,.34],leggings);
+const leftCalf=blob(body,'#5d315f',[-.38,-.88,.04],[.33,.68,.31],leggings),rightCalf=blob(body,'#5d315f',[.38,-.88,.04],[.33,.68,.31],leggings);
+const leftShoe=blob(body,'#fa77bd',[-.38,-1.52,.18],[.43,.24,.68],shoe),rightShoe=blob(body,'#fa77bd',[.38,-1.52,.18],[.43,.24,.68],shoe);
+const leftShoeTop=blob(body,'#fff8f1',[-.38,-1.4,.34],[.31,.1,.4],topmat),rightShoeTop=blob(body,'#fff8f1',[.38,-1.4,.34],[.31,.1,.4],topmat);
+const neck=blob(body,'#e9cdbd',[0,2.55,.02],[.2,.25,.19],skin);
+const headGroup=new THREE.Group();headGroup.position.set(0,3.2,0);body.add(headGroup);
+const head=blob(headGroup,'#e9cdbd',[0,0,0],[.64,.72,.57],skin);
+const hairCap=blob(headGroup,'#fff8f1',[0,.43,-.04],[.72,.49,.64],hair);
+const fringe=blob(headGroup,'#fff8f1',[0,.28,.42],[.48,.2,.26],hair);
+const leftBraid=blob(body,'#fff8f1',[-.61,2.53,-.08],[.22,1.22,.25],hair);leftBraid.rotation.z=-.12;
+const rightBraid=blob(body,'#fff8f1',[.61,2.53,-.08],[.22,1.22,.25],hair);rightBraid.rotation.z=.12;
+blob(body,'#fff8f1',[0,2.98,-.44],[.57,.74,.22],hair);
+for(let i=-2;i<=2;i++)line(body,[[i*.16,3.52,-.12],[i*.19,3.1,-.38],[i*.27,2.55,-.34],[i*.34,1.82,-.2]],.025,mat(i%2?'#fffdfb':'#e8e1eb',.42));
+const face=blob(headGroup,'#e9cdbd',[0,-.08,.12],[.56,.57,.48],skin);
+const eyeWhite=mat('#fffdfa',.22),iris=mat('#775078',.25),pupil=mat('#21192a',.18),brow=mat('#806568',.72),blush=mat('#e9a1a7',.55),lipmat=mat('#a94f70',.35);
+const leftEye=blob(headGroup,'#2b1f2b',[-.19,.04,.54],[.105,.13,.055],eyeWhite),rightEye=blob(headGroup,'#2b1f2b',[.19,.04,.54],[.105,.13,.055],eyeWhite);
+blob(headGroup,'#775078',[-.19,.035,.589],[.047,.07,.025],iris);blob(headGroup,'#775078',[.19,.035,.589],[.047,.07,.025],iris);
+blob(headGroup,'#21192a',[-.19,.035,.61],[.022,.045,.014],pupil);blob(headGroup,'#21192a',[.19,.035,.61],[.022,.045,.014],pupil);
+line(headGroup,[[-.31,.2,.51],[-.2,.24,.55],[-.08,.2,.53]],.025,brow);line(headGroup,[[.08,.2,.53],[.2,.24,.55],[.31,.2,.51]],.025,brow);
+const nose=blob(headGroup,'#c99e8b',[0,-.09,.59],[.055,.1,.07],skinDark);
+const leftCheek=blob(headGroup,'#e7b3b9',[-.32,-.17,.48],[.1,.055,.025],blush),rightCheek=blob(headGroup,'#e7b3b9',[.32,-.17,.48],[.1,.055,.025],blush);
+const lips=blob(headGroup,'#c4828f',[0,-.3,.54],[.12,.045,.035],lipmat);line(headGroup,[[-.12,-.29,.55],[0,-.33,.57],[.12,-.29,.55]],.012,lipmat);
+const leftArm=blob(body,'#e9cdbd',[-.95,2.05,.04],[.2,.72,.2],skin);leftArm.rotation.z=-.4;
+const rightArm=blob(body,'#e9cdbd',[.95,2.05,.04],[.2,.72,.2],skin);rightArm.rotation.z=.4;
+blob(body,'#e9cdbd',[-1.12,1.47,.08],[.17,.2,.17],skin);blob(body,'#e9cdbd',[1.12,1.47,.08],[.17,.2,.17],skin);
+// Segunda dançarina: conjunto rosa-metálico, cabelo curto branco e headset escuro.
+const partnerRoot=new THREE.Group();partnerRoot.position.set(1.25,0,.05);partnerRoot.scale.setScalar(.82);scene.add(partnerRoot);
 const partner=new THREE.Group();partnerRoot.add(partner);
-const latex=mat('#e99abd',.2,.12),latexBright=mat('#ffd0e3',.24,.08),latexTrim=mat('#ff75c8',.22,.15);
-const partnerSkin=mat('#f3bfd0',.32,.04),partnerHair=mat('#171321',.32,.08);
-const partnerTorso=blob(partner,'#e99abd',[0,1.9,0],[.38,.88,.34],latex);
-blob(partner,'#e99abd',[0,1.15,.01],[.88,.45,.58],latex);
-const partnerLeftHip=blob(partner,'#e99abd',[-.53,1.08,.06],[.56,.68,.53],latex),partnerRightHip=blob(partner,'#e99abd',[.53,1.08,.06],[.56,.68,.53],latex);
-const partnerLeftGlute=blob(partner,'#e99abd',[-.49,1.03,-.4],[.59,.78,.62],latex),partnerRightGlute=blob(partner,'#e99abd',[.49,1.03,-.4],[.59,.78,.62],latex);
-blob(partner,'#ffd0e3',[0,1.7,.3],[.045,.38,.04],latexBright);
-const partnerLeftLeg=blob(partner,'#e99abd',[-.42,.12,0],[.39,1.04,.38],latex);
-const partnerRightLeg=blob(partner,'#e99abd',[.42,.12,0],[.39,1.04,.38],latex);
-const partnerLeftBoot=blob(partner,'#e99abd',[-.42,-1.35,.1],[.42,.43,.47],latex);
-const partnerRightBoot=blob(partner,'#e99abd',[.42,-1.35,.1],[.42,.43,.47],latex);
-blob(partner,'#ffd0e3',[-.42,-1.48,.48],[.34,.08,.08],latexBright);blob(partner,'#ffd0e3',[.42,-1.48,.48],[.34,.08,.08],latexBright);
-const partnerLeftArm=blob(partner,'#e99abd',[-.75,2.35,.02],[.19,.67,.2],latex);partnerLeftArm.rotation.z=-.62;
-const partnerRightArm=blob(partner,'#e99abd',[.75,2.35,.02],[.19,.67,.2],latex);partnerRightArm.rotation.z=.62;
-const partnerLeftHand=blob(partner,'#e99abd',[-.35,2.83,.02],[.2,.22,.21],latex),partnerRightHand=blob(partner,'#e99abd',[.35,2.83,.02],[.2,.22,.21],latex);
-blob(partner,'#e99abd',[0,2.52,0],[.16,.2,.16],latex);
-const partnerHead=blob(partner,'#f3bfd0',[0,3.04,.02],[.57,.62,.55],partnerSkin);
-blob(partner,'#171321',[0,3.43,-.04],[.65,.36,.59],partnerHair);
-const earMat=mat('#e99abd',.25,.04),earInner=mat('#ffd0e3',.3,.02);
-const leftEar=blob(partner,'#e99abd',[-.37,3.58,-.02],[.23,.83,.2],earMat),rightEar=blob(partner,'#e99abd',[.37,3.58,-.02],[.23,.83,.2],earMat);leftEar.rotation.z=-.25;rightEar.rotation.z=.25;
-blob(partner,'#ffd0e3',[-.37,3.59,.16],[.12,.59,.035],earInner);blob(partner,'#ffd0e3',[.37,3.59,.16],[.12,.59,.035],earInner);
+const latex=mat('#b85d9c',.3,.18),latexBright=mat('#ffd0e3',.24,.08),latexTrim=mat('#ff75c8',.22,.15);
+const partnerSkin=mat('#e9cdbd',.58),partnerHair=mat('#fff8f1',.32),headset=mat('#201a2d',.25,.35);
+const partnerTorso=profileMesh(partner,latex,[[1.45,.43,.28],[1.65,.42,.27],[1.9,.55,.32],[2.12,.58,.32],[2.32,.4,.24],[2.38,.3,.21]],48,.035);
+// Costuras frontais do macacão permanecem planas e integradas ao torso.
+blob(partner,'#b85d9c',[0,1.08,0],[.72,.52,.45],latex);
+const partnerLeftHip=blob(partner,'#b85d9c',[-.42,1.02,-.2],[.44,.55,.4],latex),partnerRightHip=blob(partner,'#b85d9c',[.42,1.02,-.2],[.44,.55,.4],latex);
+const partnerLeftGlute=blob(partner,'#b85d9c',[-.4,1.02,-.38],[.45,.55,.35],latex),partnerRightGlute=blob(partner,'#b85d9c',[.4,1.02,-.38],[.45,.55,.35],latex);
+line(partner,[[-.68,1.45,.15],[0,1.4,.38],[.68,1.45,.15]],.023,latexBright);blob(partner,'#ffd0e3',[0,1.55,.3],[.035,.25,.025],latexBright);
+const partnerLeftLeg=blob(partner,'#b85d9c',[-.34,.08,0],[.32,.96,.32],latex),partnerRightLeg=blob(partner,'#b85d9c',[.34,.08,0],[.32,.96,.32],latex);
+const partnerLeftBoot=blob(partner,'#b85d9c',[-.34,-1.28,.1],[.36,.4,.42],latex),partnerRightBoot=blob(partner,'#b85d9c',[.34,-1.28,.1],[.36,.4,.42],latex);
+blob(partner,'#ffd0e3',[-.34,-1.4,.42],[.28,.07,.06],latexBright);blob(partner,'#ffd0e3',[.34,-1.4,.42],[.28,.07,.06],latexBright);
+const partnerLeftArm=blob(partner,'#e9cdbd',[-.72,2.25,.02],[.17,.65,.18],partnerSkin);partnerLeftArm.rotation.z=-.62;
+const partnerRightArm=blob(partner,'#e9cdbd',[.72,2.25,.02],[.17,.65,.18],partnerSkin);partnerRightArm.rotation.z=.62;
+const partnerLeftHand=blob(partner,'#e9cdbd',[-.35,2.72,.02],[.16,.19,.16],partnerSkin),partnerRightHand=blob(partner,'#e9cdbd',[.35,2.72,.02],[.16,.19,.16],partnerSkin);
+blob(partner,'#e9cdbd',[0,2.5,0],[.15,.2,.15],partnerSkin);
+const partnerHead=blob(partner,'#e9cdbd',[0,3.04,.02],[.53,.59,.51],partnerSkin);
+blob(partner,'#fff8f1',[0,3.38,-.04],[.62,.39,.56],partnerHair);
+blob(partner,'#fff8f1',[-.48,3.08,-.08],[.16,.43,.2],partnerHair);blob(partner,'#fff8f1',[.48,3.08,-.08],[.16,.43,.2],partnerHair);
+const earMat=headset,earInner=latexBright;
+const leftEar=blob(partner,'#201a2d',[-.52,3.3,.02],[.12,.2,.12],headset),rightEar=blob(partner,'#201a2d',[.52,3.3,.02],[.12,.2,.12],headset);
+const visor=blob(partner,'#201a2d',[0,3.28,.49],[.61,.12,.1],headset);visor.rotation.x=-.1;
+blob(partner,'#8ef6e8',[0,3.28,.584],[.37,.035,.018],mat('#8ef6e8',.18,.2));
+const partnerEye=mat('#21192a',.18),partnerIris=mat('#54dcd0',.2);
+blob(partner,'#fffdfa',[-.16,3.05,.48],[.085,.1,.045],eyeWhite);blob(partner,'#fffdfa',[.16,3.05,.48],[.085,.1,.045],eyeWhite);
+blob(partner,'#54dcd0',[-.16,3.05,.52],[.04,.06,.02],partnerIris);blob(partner,'#54dcd0',[.16,3.05,.52],[.04,.06,.02],partnerIris);
+blob(partner,'#21192a',[-.16,3.05,.54],[.02,.04,.01],partnerEye);blob(partner,'#21192a',[.16,3.05,.54],[.02,.04,.01],partnerEye);
+blob(partner,'#c99e8b',[0,2.93,.52],[.045,.08,.05],skinDark);blob(partner,'#a94f70',[0,2.78,.5],[.1,.035,.03],lipmat);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#151220',.8));floor.rotation.x=-Math.PI/2;floor.position.y=-1.75;floor.receiveShadow=true;scene.add(floor);
 const stage=new THREE.Mesh(new THREE.CylinderGeometry(2.9,3.1,.22,64),mat('#201727',.32,.2));stage.position.y=-1.64;stage.receiveShadow=true;stage.castShadow=true;scene.add(stage);
 const ring=new THREE.Mesh(new THREE.TorusGeometry(2.5,.028,12,100),new THREE.MeshBasicMaterial({color:'#ff8fd4'}));ring.rotation.x=Math.PI/2;ring.position.y=-1.52;scene.add(ring);
@@ -102,7 +115,7 @@ const glow=new THREE.Mesh(new THREE.CircleGeometry(3.2,64),new THREE.MeshBasicMa
 scene.add(new THREE.AmbientLight(0xffffff,.35));
 const spot=new THREE.SpotLight('#ffffff',60,18,Math.PI/4,.55,1);spot.position.set(0,8,5);spot.target.position.set(0,2,0);spot.castShadow=true;spot.shadow.mapSize.set(1024,1024);scene.add(spot,spot.target);
 const glowPads=[];for(let i=0;i<18;i++){const a=i/18*Math.PI*2;const p=new THREE.Mesh(new THREE.SphereGeometry(.08,16,12),new THREE.MeshBasicMaterial({color:i%2? '#ff80bf':'#80f3dd'}));p.position.set(Math.cos(a)*4.2,1.4+Math.sin(a*2)*.9,-0.5+Math.sin(a)*2);scene.add(p);glowPads.push(p)}
-let bpm=112,score=0,combo=0,soundOn=false,audioCtx=null,drag=false,lastX=0,rot=0,targetRot=0,zoom=15.5;const clock=new THREE.Clock();let elapsed=0,hitPulse=0;const scoreEl=document.getElementById('score'),comboEl=document.getElementById('combo'),toast=document.getElementById('toast'),bar=document.getElementById('beatbar');
+let bpm=112,score=0,combo=0,soundOn=false,audioCtx=null,drag=false,lastX=0,rot=0,targetRot=0,zoom=15.5,orbitAngle=0;const clock=new THREE.Clock();let elapsed=0,hitPulse=0;const scoreEl=document.getElementById('score'),comboEl=document.getElementById('combo'),toast=document.getElementById('toast'),bar=document.getElementById('beatbar');
 function ping(freq=500,dur=.08){if(!soundOn)return;try{audioCtx ||=new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.08,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur)}catch(e){}}
 function danceHit(){const period=60/bpm,phase=((elapsed%period)/period),offset=Math.min(phase,1-phase)*period;let quality=offset<.09?'PERFEITO!':offset<.17?'NO RITMO!':'BOA!';const points=offset<.09?100:offset<.17?65:25;combo++;score+=points+Math.min(combo*2,50);scoreEl.textContent=String(score).padStart(4,'0');comboEl.textContent='COMBO ×'+combo;toast.textContent=quality;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),430);hitPulse=1;ping(quality==='PERFEITO!'?740:540,.12);if(combo%5===0)ping(980,.18)}
 document.getElementById('hit').addEventListener('click',danceHit);window.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();danceHit()}});
@@ -111,10 +124,10 @@ renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX
 const zoomSlider=document.getElementById('cameraZoom'),zoomValue=document.getElementById('zoomValue');zoomSlider.addEventListener('input',()=>{zoom=Number(zoomSlider.value);zoomValue.textContent=zoom.toFixed(1)});
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;const beatLen=60/bpm,phase=(elapsed%beatLen)/beatLen;bar.style.transform=`translateX(${phase*330-100}%)`;
  const wave=Math.sin(elapsed*Math.PI*2*(bpm/60));const sway=Math.sin(elapsed*2.25);const bounce=Math.abs(wave);const bootyWiggle=Math.sin(elapsed*7.5)*.2;
- body.position.y=-.45 + Math.abs(wave)*.18 + hitPulse*.08;
+ body.position.y=.18 + Math.abs(wave)*.18 + hitPulse*.08;
  body.rotation.z=sway*.08;
  body.rotation.y=Math.sin(elapsed*1.3)*.18;
- const partnerBeat=Math.sin(elapsed*Math.PI*2*(bpm/60)+.7),partnerBounce=Math.abs(partnerBeat),partnerWiggle=Math.sin(elapsed*7.5);partner.position.y=-.45+partnerBounce*.17+hitPulse*.06;
+ const partnerBeat=Math.sin(elapsed*Math.PI*2*(bpm/60)+.7),partnerBounce=Math.abs(partnerBeat),partnerWiggle=Math.sin(elapsed*7.5);partner.position.y=-.15+partnerBounce*.17+hitPulse*.06;
  partner.rotation.z=Math.sin(elapsed*2.1+.8)*.055;
  partner.rotation.y=Math.sin(elapsed*1.15+.6)*.14;
  partnerLeftArm.rotation.z=-.62+Math.sin(elapsed*3.1)*.08;
@@ -134,7 +147,7 @@ function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDel
  leftCalf.rotation.x=.1*Math.sin(elapsed*3.5+1.1); rightCalf.rotation.x=-.1*Math.sin(elapsed*3.5+1.1);
  head.rotation.z=Math.sin(elapsed*2.7)*.06;
  for(const p of glowPads){p.position.y=1.1+Math.sin(elapsed*2.2+p.position.x)*.8;}
- hitPulse=Math.max(0,hitPulse-dt*2.8);rot+=(targetRot-rot)*.08;camera.position.x=Math.sin(rot)*zoom*.12;camera.position.z=zoom;camera.lookAt(0,.8,0);renderer.render(scene,camera)}animate();
+ hitPulse=Math.max(0,hitPulse-dt*2.8);rot+=(targetRot-rot)*.08;orbitAngle+=dt*.11;const cameraAngle=orbitAngle+rot;camera.position.set(Math.sin(cameraAngle)*zoom,2.7,Math.cos(cameraAngle)*zoom);camera.lookAt(.1,1.05,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<600?48:36;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
 </script>
 </body>
