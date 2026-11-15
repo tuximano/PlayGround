@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#101114" />
+<title>ATELIER — Character Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{color-scheme:dark;--bg:#101114;--panel:#181a1f;--panel2:#202229;--line:#30333c;--muted:#989ba6;--text:#f4f2ee;--accent:#d9ff76;--violet:#b8a5ff}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif}button,input{font:inherit}button{color:inherit;cursor:pointer}#app{height:100dvh;display:grid;grid-template-rows:66px 1fr 54px;background:radial-gradient(ellipse at 68% 43%,#282833 0,#17181e 42%,#111215 76%)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid #ffffff0d;z-index:2;background:#101114cc}.brand{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:800;letter-spacing:.2em}.brandmark{width:28px;height:28px;border:1px solid var(--accent);border-radius:8px;display:grid;place-items:center;color:var(--accent);font-size:14px;transform:rotate(-8deg)}.brand small{font:10px 'DM Mono',monospace;color:#777a84;letter-spacing:.14em;margin-left:3px}.topright{display:flex;gap:10px;align-items:center}.status{font:10px 'DM Mono',monospace;letter-spacing:.13em;color:#a8c76a;display:flex;align-items:center;gap:8px;margin-right:12px}.status:before{content:'';height:6px;width:6px;border-radius:50%;background:#c9f96a;box-shadow:0 0 11px #c9f96a}.iconbtn,.pillbtn{border:1px solid #ffffff1a;background:#ffffff06;border-radius:9px;padding:9px 13px;font-size:11px;color:#c5c6cb;transition:.2s}.iconbtn:hover,.pillbtn:hover{border-color:#ffffff44;background:#ffffff10}.iconbtn{font-size:15px;padding:7px 10px}.workspace{position:relative;min-height:0;display:grid;grid-template-columns:310px minmax(0,1fr)}
+.controls{position:relative;z-index:1;overflow:auto;padding:22px 19px 24px 24px;background:linear-gradient(90deg,#141519f2,#17181ddf);border-right:1px solid #ffffff0e;scrollbar-width:thin;scrollbar-color:#484a52 transparent}.eyebrow{font:10px 'DM Mono',monospace;letter-spacing:.17em;color:#92949d;text-transform:uppercase}.heading{font-size:22px;letter-spacing:-.05em;margin:8px 0 4px;font-weight:700}.subline{font-size:11px;color:#8f919b;margin-bottom:22px}.section{border-top:1px solid #ffffff12;padding:18px 0 17px}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.sectiontitle{font-size:11px;font-weight:700;letter-spacing:.04em}.sectionmeta{font:10px 'DM Mono',monospace;color:#888b95}.height-read{color:var(--accent);font-size:12px;font-family:'DM Mono',monospace}.range{width:100%;appearance:none;height:3px;border-radius:9px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 50%,#44464e 50%);outline:none;margin:11px 0 5px}.range::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border:3px solid #111;background:var(--accent);border-radius:50%;box-shadow:0 0 0 1px var(--accent)}.range::-moz-range-thumb{width:10px;height:10px;border:3px solid #111;background:var(--accent);border-radius:50%;box-shadow:0 0 0 1px var(--accent)}.rangeends{display:flex;justify-content:space-between;font:9px 'DM Mono',monospace;color:#696c75}.layer{height:43px;display:flex;align-items:center;justify-content:space-between;border:1px solid #ffffff12;border-radius:9px;padding:0 11px;margin-top:8px;background:#ffffff04}.layerinfo{display:flex;gap:9px;align-items:center;font-size:11px;color:#d4d3d4}.layericon{width:23px;height:23px;background:#292b31;border-radius:6px;display:grid;place-items:center;font-size:12px}.switch{width:30px;height:17px;border-radius:12px;background:#393b43;padding:2px;transition:.18s}.switch:after{content:'';display:block;width:13px;height:13px;background:#a5a6ad;border-radius:50%;transition:.18s}.switch.on{background:#9abd51}.switch.on:after{background:#f4ffd8;transform:translateX(13px)}.swatchrow{display:flex;gap:10px;align-items:center}.swatch{width:23px;height:23px;border:2px solid transparent;border-radius:50%;box-shadow:inset 0 0 0 1px #ffffff40;transition:.2s}.swatch.active{outline:1px solid var(--accent);outline-offset:3px}.palette{display:flex;gap:13px;align-items:center}.posegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.posebtn{height:36px;border:1px solid #ffffff12;border-radius:8px;background:#ffffff04;font-size:10px;color:#a9abb3;transition:.2s}.posebtn.active{border-color:#d9ff7666;color:#e7f7c5;background:#d9ff7610}.note{font-size:9px;color:#777a82;line-height:1.55;margin-top:12px}
+.stage{position:relative;min-width:0;overflow:hidden}.stage:before{content:'';pointer-events:none;position:absolute;inset:0;background:linear-gradient(90deg,#17181d 0%,transparent 19%,transparent 86%,#11121555 100%);z-index:0}.stage-label{position:absolute;top:24px;left:28px;z-index:1}.stage-label .name{font-size:12px;font-weight:700;letter-spacing:.03em}.stage-label .tag{font:9px 'DM Mono',monospace;color:#81838c;margin-top:6px;letter-spacing:.12em}.stage-tools{position:absolute;top:19px;right:22px;z-index:3;display:flex;gap:6px}.stage-tools button{width:33px;height:33px;border:1px solid #ffffff19;background:#17181dbb;backdrop-filter:blur(8px);border-radius:8px;color:#c2c3ca}.stage-tools button:hover{border-color:#d9ff7666;color:var(--accent)}#view{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}.hint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:2;background:#131419ba;border:1px solid #ffffff13;border-radius:20px;padding:9px 14px;display:flex;align-items:center;gap:9px;color:#9c9ea8;font-size:9px;white-space:nowrap;backdrop-filter:blur(10px)}.hint b{font:9px 'DM Mono',monospace;color:#e1e1e3}.hint .dot{color:#5d5f66}.measure{position:absolute;bottom:58px;right:26px;z-index:1;color:#777982;font:9px 'DM Mono',monospace;writing-mode:vertical-rl;display:flex;align-items:center;gap:8px}.measure:before{content:'';width:1px;height:80px;background:linear-gradient(transparent,#71737b,transparent)}.floater{position:absolute;left:25px;bottom:23px;z-index:2;font:9px 'DM Mono',monospace;letter-spacing:.08em;color:#676a73}.floater span{color:#a2a4ac}
+.bottombar{border-top:1px solid #ffffff0d;background:#121317;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:2}.footleft,.footright{display:flex;gap:16px;align-items:center}.footitem{font:9px 'DM Mono',monospace;color:#797c85;letter-spacing:.07em}.footitem strong{color:#c6c7cb;font-weight:400}.footsep{height:14px;width:1px;background:#ffffff1a}.playbtn{height:34px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#171a10;font-size:10px;font-weight:800;letter-spacing:.04em;transition:.2s}.playbtn:hover{filter:brightness(1.08);transform:translateY(-1px)}.playbtn.running{background:#262a21;border:1px solid #9abd5177;color:#d9ff76}.toast{position:absolute;top:70px;left:50%;transform:translate(-50%,-12px);z-index:5;opacity:0;pointer-events:none;background:#d9ff76;color:#171a10;border-radius:8px;padding:10px 15px;font-size:11px;font-weight:700;transition:.25s}.toast.show{opacity:1;transform:translate(-50%,0)}.error{position:absolute;inset:0;display:grid;place-items:center;color:#bbb;text-align:center;padding:30px;pointer-events:none;font-size:12px}
+@media(max-width:760px){#app{grid-template-rows:56px 1fr 48px}.topbar{padding:0 14px}.brand{font-size:13px}.brand small{display:none}.status{display:none}.workspace{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.stage{grid-row:1;min-height:320px}.controls{grid-row:2;max-height:37dvh;padding:14px 16px 18px;border-right:0;border-top:1px solid #ffffff12;display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.controls .intro{grid-column:1/-1}.heading{font-size:18px;margin:5px 0 2px}.subline{margin-bottom:4px}.section{padding:12px 0}.section.layers{grid-column:1}.section.appearance{grid-column:2}.section.poses{grid-column:1/-1;padding-bottom:10px}.stage-label{top:14px;left:16px}.stage-tools{top:12px;right:12px}.hint{bottom:12px;font-size:8px}.floater{display:none}.measure{right:11px;bottom:44px}.bottombar{padding:0 13px}.footleft{gap:9px}.footitem{font-size:8px}.footitem:nth-of-type(3),.footsep:nth-of-type(2){display:none}.footright{gap:6px}.pillbtn{padding:8px 10px;font-size:10px}.playbtn{height:32px;padding:0 11px;font-size:9px}}
+@media(max-width:420px){.controls{grid-template-columns:1fr;max-height:40dvh}.controls .intro,.section.layers,.section.appearance,.section.poses{grid-column:1}.section.appearance{padding-top:2px}.section.poses{padding-top:8px}.stage{min-height:280px}.footitem:nth-of-type(2){display:none}.footleft{gap:7px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="topbar"><div class="brand"><div class="brandmark">A</div>ATELIER <small>CHARACTER STUDIO</small></div><div class="topright"><div class="status">STUDIO READY</div><button class="iconbtn" id="helpBtn" aria-label="Help">?</button><button class="pillbtn" id="resetBtn">Reset studio</button></div></header>
+<main class="workspace">
+<aside class="controls">
+<div class="intro"><div class="eyebrow">CREATOR / 01</div><div class="heading">Meet Nova</div><div class="subline">Adult character · stylized 3D · fully covered</div></div>
+<section class="section"><div class="sectionhead"><span class="sectiontitle">Character height</span><span class="height-read" id="heightLabel">1.65 m</span></div><input class="range" id="height" type="range" min="1.30" max="2.10" step="0.01" value="1.65" aria-label="Character height"><div class="rangeends"><span>1.30 M</span><span>2.10 M</span></div></section>
+<section class="section layers"><div class="sectionhead"><span class="sectiontitle">Outfit layers</span><span class="sectionmeta">BASE SUIT STAYS ON</span></div>
+<div class="layer"><div class="layerinfo"><span class="layericon">✧</span>Studio jacket</div><button class="switch on" data-layer="jacket" aria-label="Toggle jacket" aria-pressed="true"></button></div>
+<div class="layer"><div class="layerinfo"><span class="layericon">▤</span>Utility trousers</div><button class="switch on" data-layer="trousers" aria-label="Toggle trousers" aria-pressed="true"></button></div>
+<div class="layer"><div class="layerinfo"><span class="layericon">◒</span>High-top boots</div><button class="switch on" data-layer="boots" aria-label="Toggle boots" aria-pressed="true"></button></div></section>
+<section class="section appearance"><div class="sectionhead"><span class="sectiontitle">Suit color</span><span class="sectionmeta">PALETTE 01</span></div><div class="palette"><div class="swatchrow"><button class="swatch active" data-color="#9ba5bd" style="background:#9ba5bd" aria-label="Slate"></button><button class="swatch" data-color="#df8065" style="background:#df8065" aria-label="Coral"></button><button class="swatch" data-color="#6c9e8d" style="background:#6c9e8d" aria-label="Sage"></button><button class="swatch" data-color="#ba9ce2" style="background:#ba9ce2" aria-label="Lilac"></button><button class="swatch" data-color="#e1c36d" style="background:#e1c36d" aria-label="Gold"></button></div></div></section>
+<section class="section poses"><div class="sectionhead"><span class="sectiontitle">Pose & motion</span><span class="sectionmeta" id="poseStatus">IDLE</span></div><div class="posegrid"><button class="posebtn active" data-pose="idle">◉ &nbsp; Relaxed</button><button class="posebtn" data-pose="wave">↗ &nbsp; Wave</button><button class="posebtn" data-pose="applause">✳ &nbsp; Applause</button><button class="posebtn" data-pose="turn">⟳ &nbsp; Turntable</button></div><div class="note">Drag to orbit · scroll or pinch to zoom · right-drag to pan. Outfit toggles reveal a modest, opaque studio suit.</div></section>
+</aside>
+<section class="stage" aria-label="3D character viewer"><div class="stage-label"><div class="name">NOVA / FIELD TEST</div><div class="tag">HUMAN · ADULT · 3D PREVIEW</div></div><div class="stage-tools"><button id="frontBtn" title="Front view" aria-label="Front view">⌂</button><button id="spinBtn" title="Auto orbit" aria-label="Toggle auto orbit">⟳</button><button id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">⛶</button></div><canvas id="view"></canvas><div class="floater">MODEL SCALE <span id="scaleLabel">100%</span></div><div class="measure">1.65 METERS</div><div class="hint"><b>DRAG</b> ORBIT <span class="dot">·</span> <b>SCROLL</b> ZOOM <span class="dot">·</span> <b>SHIFT + DRAG</b> PAN</div><div class="toast" id="toast">A small note</div></section>
+</main>
+<footer class="bottombar"><div class="footleft"><div class="footitem">SCENE <strong>01 / 01</strong></div><div class="footsep"></div><div class="footitem">CAMERA <strong id="cameraState">FREE ORBIT</strong></div><div class="footsep"></div><div class="footitem">RENDER <strong>REALTIME</strong></div></div><div class="footright"><button class="pillbtn" id="photoBtn">◎ &nbsp; Snapshot</button><button class="playbtn" id="playBtn">▶ &nbsp; START POSE</button></div></footer>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const canvas=document.querySelector('#view');
+const scene=new THREE.Scene(); scene.background=null;
+const camera=new THREE.PerspectiveCamera(33,1,.1,100); camera.position.set(3.2,2.1,4.6);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.18;
+const controls=new OrbitControls(camera,canvas); controls.target.set(0,.84,0); controls.enableDamping=true; controls.dampingFactor=.075; controls.minDistance=2.2; controls.maxDistance=8; controls.maxPolarAngle=Math.PI*.88; controls.minPolarAngle=.12; controls.screenSpacePanning=true;
+scene.add(new THREE.HemisphereLight(0xdce6ff,0x44332b,2.0));
+function areaLight(color,intensity,pos,size){const light=new THREE.DirectionalLight(color,intensity);light.position.set(...pos);light.castShadow=true;light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-3;light.shadow.camera.right=3;light.shadow.camera.top=4;light.shadow.camera.bottom=-2;scene.add(light);return light}
+areaLight(0xffe6ce,3.0,[3,5,4]); areaLight(0xa6b6ff,2.4,[-4,3,-2]);
+const fill=new THREE.PointLight(0xd9ff76,1.3,7);fill.position.set(1,1.8,2);scene.add(fill);
+const floorMat=new THREE.MeshStandardMaterial({color:0x22232b,roughness:.7,metalness:.15});const floor=new THREE.Mesh(new THREE.CircleGeometry(5,96),floorMat);floor.rotation.x=-Math.PI/2;floor.position.y=-.018;floor.receiveShadow=true;scene.add(floor);
+const grid=new THREE.GridHelper(8,40,0x62616b,0x3d3d46);grid.position.y=-.01;grid.material.transparent=true;grid.material.opacity=.19;scene.add(grid);
+const ringMat=new THREE.MeshBasicMaterial({color:0xb7adfb,transparent:true,opacity:.2});const ring=new THREE.Mesh(new THREE.TorusGeometry(1.12,.007,8,90),ringMat);ring.rotation.x=Math.PI/2;ring.position.y=.006;scene.add(ring);
+const mats={skin:new THREE.MeshStandardMaterial({color:0xd9a17f,roughness:.68}),hair:new THREE.MeshStandardMaterial({color:0x332c48,roughness:.82}),hairHi:new THREE.MeshStandardMaterial({color:0x746397,roughness:.7}),suit:new THREE.MeshStandardMaterial({color:0x9ba5bd,roughness:.65}),jacket:new THREE.MeshStandardMaterial({color:0x6357a8,roughness:.48}),trim:new THREE.MeshStandardMaterial({color:0xe1bd70,metalness:.55,roughness:.33}),boot:new THREE.MeshStandardMaterial({color:0x272b3b,roughness:.55}),eye:new THREE.MeshStandardMaterial({color:0x292a34,roughness:.3}),white:new THREE.MeshStandardMaterial({color:0xf0d6bb,roughness:.5})};
+const root=new THREE.Group();scene.add(root);const body=new THREE.Group();root.add(body);const meshes={jacket:[],trousers:[],boots:[]};
+function ellipsoid(parent,mat,pos,scale,seg=24){const m=new THREE.Mesh(new THREE.SphereGeometry(1,seg,16),mat);m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function link(parent,mat,a,b,r1,r2=r1,radial=16){const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b),d=new THREE.Vector3().subVectors(vb,va);const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,d.length(),radial,1),mat);mesh.position.copy(va).add(vb).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);ellipsoid(parent,mat,a,[r1,r1,r1],16);ellipsoid(parent,mat,b,[r2,r2,r2],16);return mesh}
+function layer(mesh,kind){meshes[kind].push(mesh);return mesh}
+// Fully opaque, continuous base suit under all optional garment pieces.
+ellipsoid(body,mats.suit,[0,.82,0],[.205,.255,.135]);ellipsoid(body,mats.suit,[0,1.12,0],[.285,.31,.16]);ellipsoid(body,mats.suit,[0,1.285,0],[.32,.105,.17]);
+const armPivots=[];
+for(const s of [-1,1]){
+  // Legs: the continuous opaque suit remains beneath removable trousers.
+  link(body,mats.suit,[s*.105,.78,0],[s*.12,.43,.005],.105,.075);link(body,mats.suit,[s*.12,.43,.005],[s*.12,.12,0],.073,.052);
+  layer(link(body,new THREE.MeshStandardMaterial({color:0x3a3b4a,roughness:.65}),[s*.108,.76,-.002],[s*.12,.43,-.002],.119,.084),'trousers');
+  layer(link(body,new THREE.MeshStandardMaterial({color:0x3a3b4a,roughness:.65}),[s*.12,.43,-.002],[s*.12,.105,-.002],.084,.061),'trousers');
+  // Pivoted arms enable distinct, readable wave and applause poses.
+  const arm=new THREE.Group();arm.position.set(s*.255,1.245,0);body.add(arm);armPivots.push({side:s,group:arm});
+  link(arm,mats.suit,[0,0,0],[s*.105,-.225,.025],.092,.075);link(arm,mats.suit,[s*.105,-.225,.025],[s*.15,-.475,.055],.068,.048);ellipsoid(arm,mats.skin,[s*.159,-.53,.06],[.055,.083,.045]);
+  layer(link(arm,new THREE.MeshStandardMaterial({color:0x6357a8,roughness:.48}),[0,0,.004],[s*.105,-.225,.028],.104,.083),'jacket');
+  layer(link(arm,new THREE.MeshStandardMaterial({color:0x6357a8,roughness:.48}),[s*.105,-.225,.028],[s*.15,-.455,.055],.083,.062),'jacket');
+  // Boots and gold eyelets.
+  layer(ellipsoid(body,mats.boot,[s*.12,.095,.075],[.09,.105,.16]),'boots');
+  for(let i=0;i<3;i++){const eye=ellipsoid(body,mats.trim,[s*.12,.125+i*.025,.16],[.009,.009,.009],12);layer(eye,'boots')}
+}
+// Neck and friendly, adult face.
+link(body,mats.skin,[0,1.30,0],[0,1.395,0],.075,.07);
+ellipsoid(body,mats.skin,[0,1.49,0],[.145,.17,.13],32);
+// ears
+for(const s of [-1,1])ellipsoid(body,mats.skin,[s*.145,1.485,0],[.032,.05,.024]);
+// face details face toward +Z
+for(const s of [-1,1]){
+ ellipsoid(body,mats.eye,[s*.052,1.505,.116],[.014,.021,.009],16);
+ ellipsoid(body,mats.white,[s*.052,1.512,.123],[.004,.005,.003],12);
+ const brow=ellipsoid(body,mats.hair,[s*.052,1.539,.113],[.032,.009,.012],16);brow.rotation.z=s*-.10;
+}
+ellipsoid(body,mats.skin,[0,1.477,.127],[.018,.027,.014],12);
+// Sculpted hair cap and swept fringe
+ellipsoid(body,mats.hair,[0,1.59,-.006],[.151,.095,.142],32);
+ellipsoid(body,mats.hair,[0,1.552,-.102],[.14,.095,.105],24);
+const fringe=ellipsoid(body,mats.hair,[.035,1.595,.092],[.105,.039,.065],24);fringe.rotation.z=-.48;
+const fringeHi=ellipsoid(body,mats.hairHi,[-.035,1.63,.045],[.07,.018,.045],18);fringeHi.rotation.z=.25;
+for(let i=0;i<3;i++){const strand=ellipsoid(body,i===1?mats.hairHi:mats.hair,[(-.07+i*.07),1.565,.1],[.035,.065,.028],16);strand.rotation.z=(i-1)*.52}
+// Jacket shell: shaped open-front coat with contrast edging, layered over suit.
+const coat=ellipsoid(body,mats.jacket,[0,1.115,.005],[.30,.275,.175],32);coat.scale.z=1.02;layer(coat,'jacket');
+const lapelL=ellipsoid(body,mats.trim,[-.092,1.2,.165],[.034,.14,.018]);lapelL.rotation.z=-.24;layer(lapelL,'jacket');
+const lapelR=ellipsoid(body,mats.trim,[.092,1.2,.165],[.034,.14,.018]);lapelR.rotation.z=.24;layer(lapelR,'jacket');
+const hem=ellipsoid(body,mats.trim,[0,.89,.14],[.24,.018,.018]);layer(hem,'jacket');
+// trousers waist band and seam details
+const belt=ellipsoid(body,mats.trim,[0,.79,.137],[.205,.028,.018]);layer(belt,'trousers');
+for(const s of [-1,1]){const seam=ellipsoid(body,mats.trim,[s*.12,.52,.072],[.008,.19,.008]);layer(seam,'trousers')}
+// Simple platform markings and tiny floating studio lights.
+for(let i=0;i<3;i++){const orb=new THREE.Mesh(new THREE.SphereGeometry(.018,16,12),new THREE.MeshBasicMaterial({color:i===1?0xd9ff76:0xc2b7ff}));orb.position.set([-1.0,1.05,1][i], [1.32,1.72,1.22][i],[-.25,.25,-.65][i]);scene.add(orb)}
+
+let height=1.65,pose='idle',playing=false,autoSpin=false,applausePhase=0,last=0;
+function updateHeight(v){height=Number(v);const scale=height/1.65;root.scale.setScalar(scale);document.querySelector('#heightLabel').textContent=height.toFixed(2)+' m';document.querySelector('#scaleLabel').textContent=Math.round(scale*100)+'%';document.querySelector('.measure').textContent=height.toFixed(2)+' METERS';}
+function setLayer(name,on){for(const m of meshes[name])m.visible=on}
+function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(canvas);resize();
+function animate(now){requestAnimationFrame(animate);const dt=Math.min(.05,(now-last)/1000||0);last=now;controls.update();body.position.y=Math.sin(now*.0018)*.008;
+ if(autoSpin){root.rotation.y+=dt*.32}
+ const wave=pose==='wave'||(playing&&pose==='wave'),clap=pose==='applause'||(playing&&pose==='applause');
+ if(wave){root.rotation.y=Math.sin(now*.0017)*.14;body.rotation.z=Math.sin(now*.003)*.018;for(const arm of armPivots)arm.group.rotation.z=arm.side===1?1.9+Math.sin(now*.009)*.15:0}
+ else if(clap){applausePhase+=dt*8;body.rotation.z=Math.sin(applausePhase)*.025;root.rotation.y=Math.sin(applausePhase*.5)*.09;for(const arm of armPivots)arm.group.rotation.z=-arm.side*(1.12+.19*Math.sin(applausePhase))}
+ else {body.rotation.z=0;for(const arm of armPivots)arm.group.rotation.z=0;if(!autoSpin)root.rotation.y+=(0-root.rotation.y)*.035}
+ renderer.render(scene,camera)}requestAnimationFrame(animate);
+
+const toast=document.querySelector('#toast');let toastTimer;
+function notify(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2100)}
+document.querySelector('#height').addEventListener('input',e=>{updateHeight(e.target.value);e.target.style.background=`linear-gradient(90deg,var(--accent) ${((height-1.3)/.8)*100}%,#44464e ${((height-1.3)/.8)*100}%)`});
+document.querySelectorAll('.switch').forEach(b=>b.addEventListener('click',()=>{const on=!b.classList.contains('on');b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));setLayer(b.dataset.layer,on)}));
+document.querySelectorAll('.swatch').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));b.classList.add('active');mats.suit.color.set(b.dataset.color);notify('Base suit palette updated')}));
+function setPose(value){pose=value;document.querySelectorAll('.posebtn').forEach(b=>b.classList.toggle('active',b.dataset.pose===value));document.querySelector('#poseStatus').textContent=value.toUpperCase();document.querySelector('#playBtn').classList.remove('running');document.querySelector('#playBtn').innerHTML='▶ &nbsp; START POSE';playing=false;if(value==='turn'){autoSpin=true;document.querySelector('#cameraState').textContent='AUTO ORBIT'}else{autoSpin=false;document.querySelector('#cameraState').textContent='FREE ORBIT'}if(value==='wave'||value==='applause')notify(value==='wave'?'Nova says hello!':'A round of applause!')}
+document.querySelectorAll('.posebtn').forEach(b=>b.addEventListener('click',()=>setPose(b.dataset.pose)));
+document.querySelector('#playBtn').addEventListener('click',()=>{playing=!playing;const b=document.querySelector('#playBtn');b.classList.toggle('running',playing);b.innerHTML=playing?'Ⅱ &nbsp; PAUSE POSE':'▶ &nbsp; START POSE';if(playing&&pose==='idle')setPose('wave');if(playing){b.classList.add('running');b.innerHTML='Ⅱ &nbsp; PAUSE POSE'} });
+document.querySelector('#spinBtn').addEventListener('click',()=>{autoSpin=!autoSpin;document.querySelector('#cameraState').textContent=autoSpin?'AUTO ORBIT':'FREE ORBIT';document.querySelector('#spinBtn').style.color=autoSpin?'#d9ff76':'';notify(autoSpin?'Auto orbit enabled':'Free orbit enabled')});
+document.querySelector('#frontBtn').addEventListener('click',()=>{camera.position.set(0,1.8,4.4);controls.target.set(0,.84,0);controls.update();root.rotation.y=0;notify('Front view restored')});
+document.querySelector('#fullscreenBtn').addEventListener('click',()=>{const stage=document.querySelector('.stage');if(!document.fullscreenElement)stage.requestFullscreen?.();else document.exitFullscreen?.()});
+document.querySelector('#photoBtn').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='nova-studio.png';a.href=renderer.domElement.toDataURL('image/png');a.click();notify('Snapshot saved')});
+document.querySelector('#helpBtn').addEventListener('click',()=>notify('Drag to orbit · scroll to zoom · toggle layers · adjust height'));
+document.querySelector('#resetBtn').addEventListener('click',()=>{document.querySelector('#height').value='1.65';document.querySelector('#height').dispatchEvent(new Event('input'));document.querySelectorAll('.switch').forEach(b=>{b.classList.add('on');b.setAttribute('aria-pressed','true');setLayer(b.dataset.layer,true)});document.querySelectorAll('.swatch').forEach(b=>b.classList.toggle('active',b.dataset.color==='#9ba5bd'));mats.suit.color.set('#9ba5bd');setPose('idle');controls.reset();root.rotation.set(0,0,0);notify('Studio reset')});
+updateHeight(1.65);
+</script>
+</body>
+</html>
