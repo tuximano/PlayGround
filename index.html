@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#101513" />
+  <title>LAST LIGHT — Field Operations</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" aria-label="First person shooter game"></canvas>
+    <div class="scanline"></div>
+    <header id="top-hud" class="hud hidden">
+      <div class="match-chip"><span class="live-dot"></span><span id="match-label">RANKED · DUST</span><small id="round-label">ROUND 1</small></div>
+      <div class="scoreboard"><span class="team-blue"><b id="blue-score">0</b> BLUE</span><span class="score-divider">—</span><span class="team-red">RED <b id="red-score">0</b></span></div>
+      <div class="match-timer" id="timer">1:45</div>
+    </header>
+    <div id="crosshair" class="hidden"><i></i><i></i><i></i><i></i><b></b></div>
+    <div id="hit-marker" class="hidden">×</div>
+    <div id="damage-flash"></div>
+    <section id="left-hud" class="hud hidden">
+      <div class="health-card"><div class="health-icon">+</div><div><span>VITALS</span><strong id="health-value">100</strong></div><div class="health-track"><i id="health-bar"></i></div></div>
+      <div class="armor-card"><span>ARMOR</span><div class="armor-track"><i id="armor-bar"></i></div><b id="armor-value">50</b></div>
+      <div class="minimap-frame"><canvas id="minimap" width="148" height="148"></canvas><span class="map-caption">FIELD SCAN</span></div>
+    </section>
+    <section id="right-hud" class="hud hidden">
+      <div class="weapon-card"><div><span id="weapon-type">ASSAULT RIFLE</span><strong id="weapon-name">VXR-14</strong></div><div class="ammo"><b id="ammo-now">30</b><span>/</span><small id="ammo-reserve">120</small></div><div class="weapon-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <button class="hud-action reload-action" data-action="reload" aria-label="Reload">↻<small>RELOAD</small></button>
+      <button class="hud-action swap-action" data-action="swap" aria-label="Switch weapon">⇄<small>SWAP</small></button>
+    </section>
+    <div id="mobile-controls" class="hidden">
+      <div id="move-stick" class="joystick"><div class="stick-ring"></div><div class="stick-knob"></div><span>MOVE</span></div>
+      <div id="look-zone"></div>
+      <div class="mobile-actions">
+        <button data-action="crouch">⌄<small>CROUCH</small></button>
+        <button data-action="jump">↑<small>JUMP</small></button>
+        <button data-action="aim">◎<small>AIM</small></button>
+        <button class="fire-button" data-action="fire">✦<small>FIRE</small></button>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <section id="menu" class="menu-screen">
+      <div class="menu-backdrop"></div>
+      <div class="menu-content">
+        <header class="brand"><div class="brand-mark"><span></span><span></span><span></span></div><div><div class="eyebrow">FIELD OPERATIONS · SEASON 04</div><h1>LAST<span>LIGHT</span></h1></div></header>
+        <div class="menu-grid">
+          <div class="menu-main">
+            <div class="operator-tag"><span class="operator-dot"></span> OPERATOR ONLINE <small>LOCAL SESSION</small></div>
+            <h2>Every second<br />is a <em>decision.</em></h2>
+            <p class="lead">Tactical combat. Earned, not given.</p>
+            <div class="mode-picker">
+              <button class="mode-card selected" data-mode="ranked"><span class="mode-index">01 / COMPETITIVE</span><b>RANKED<br />4V4</b><small>ROUND-BASED · BOTS FILL SQUADS</small><span class="mode-arrow">↗</span></button>
+              <button class="mode-card" data-mode="royale"><span class="mode-index">02 / SURVIVAL</span><b>FIELD<br />SURVIVAL</b><small>LAST OPERATOR STANDING · 25</small><span class="mode-arrow">↗</span></button>
+            </div>
+            <div class="play-row"><button id="play-button" class="primary-button">DEPLOY <span>→</span></button><button id="training-button" class="secondary-button">FIRING RANGE</button></div>
+            <div class="menu-links"><button data-panel="arsenal">ARSENAL</button><button data-panel="profile">OPERATIVE</button><button data-panel="settings">SETTINGS</button><span>BUILD 0.4.1 · OFFLINE READY</span></div>
+          </div>
+          <aside class="operator-panel">
+            <div class="operator-art"><div class="art-grid"></div><div class="sun-disc"></div><div class="operator-silhouette"><div class="head"></div><div class="helmet"></div><div class="torso"></div><div class="arm arm-left"></div><div class="arm arm-right"></div><div class="rifle"></div></div><div class="art-coordinate">04°12' S<br />67°48' W</div><div class="art-label">FIELD<br />OPERATIVE <b>07</b></div></div>
+            <div class="rank-panel"><div class="rank-emblem"><span>✦</span></div><div class="rank-info"><small>RANKED DIVISION</small><strong id="rank-name">BRONZE I</strong><div class="rank-progress"><i id="rank-progress"></i></div><small><span id="rank-xp">0</span> / 100 RP</small></div><div class="rank-level"><small>LVL</small><b id="player-level">01</b></div></div>
+            <div class="operator-stats"><div><b id="stat-wins">0</b><small>WINS</small></div><div><b id="stat-kills">0</b><small>ELIMS</small></div><div><b id="stat-accuracy">0%</b><small>ACCURACY</small></div></div>
+          </aside>
+        </div>
+      </div>
+      <div class="menu-footer"><span>© LASTLIGHT TACTICAL SYSTEMS</span><span>01 — 04 <i>///</i> THE AMAZON THEATRE</span><span>TOUCH · KEYBOARD · MOUSE</span></div>
+    </section>
+
+    <section id="panel" class="modal hidden"><div class="modal-card"><button class="close-modal" aria-label="Close">×</button><div class="eyebrow" id="panel-kicker">FIELD SYSTEMS</div><h2 id="panel-title">SETTINGS</h2><div id="panel-content"></div></div></section>
+    <section id="round-overlay" class="round-overlay hidden"><div class="eyebrow" id="round-kicker">ROUND COMPLETE</div><h2 id="round-title">VICTORY</h2><p id="round-copy">Area secured. Resupply before deployment.</p><div id="round-stats"></div><button id="continue-button" class="primary-button">NEXT ROUND <span>→</span></button></section>
+    <div id="pause-overlay" class="pause-overlay hidden"><div class="eyebrow">FIELD PAUSED</div><h2>Take a breath.</h2><button id="resume-button" class="primary-button">RESUME <span>→</span></button><button id="exit-button" class="secondary-button">RETURN TO BASE</button></div>
+    <div id="buy-panel" class="buy-panel hidden"><div class="buy-header"><div><small>PRE-ROUND LOADOUT</small><h2>FIELD ARMORY</h2></div><div class="credits"><small>CREDITS</small><b id="credits-value">$800</b></div><button id="close-buy" class="close-modal">×</button></div><div id="buy-items" class="buy-items"></div><button id="ready-button" class="primary-button">LOCK LOADOUT <span>→</span></button></div>
+    <div id="scope-overlay" class="scope-overlay hidden"><div class="scope-ring"></div><div class="scope-cross"></div></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
