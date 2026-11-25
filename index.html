@@ -41,13 +41,16 @@ function blob(parent,color,pos,scale,material){const m=new THREE.Mesh(new THREE.
 function oval(parent,material,w,h,d,x,y,z,ry=0){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),material);mesh.scale.set(w,h,d);mesh.position.set(x,y,z);mesh.rotation.y=ry;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
 function profileMesh(parent,material,profile,segments=48,bust=0){const vertices=[],indices=[];for(const [y,rx,rz] of profile){for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2,x=Math.cos(a)*rx,front=Math.max(0,Math.sin(a));const contour=bust*Math.exp(-((Math.abs(x)-.3)**2/.025+(y-1.98)**2/.045))*front**4;vertices.push(x,y,Math.sin(a)*rz+contour)}}for(let r=0;r<profile.length-1;r++)for(let i=0;i<segments;i++){const a=r*segments+i,b=r*segments+(i+1)%segments,c=(r+1)*segments+i,d=(r+1)*segments+(i+1)%segments;indices.push(a,c,b,b,c,d)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
 function line(parent,points,radius,material){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,24,radius,8,false),material);mesh.castShadow=true;parent.add(mesh);return mesh}
+function addSoftMotion(mesh,centerY,spread=.32,amount=.022,side=1){const attr=mesh.geometry.attributes.position,base=Float32Array.from(attr.array);return(phase,sway)=>{for(let i=0;i<base.length;i+=3){const x=base[i],y=base[i+1],z=base[i+2],surface=Math.max(0,z*side);const envelope=Math.exp(-((Math.abs(x)-spread)**2/.055+(y-centerY)**2/.075))*surface**2;attr.array[i+2]=z+Math.sin(phase)*amount*envelope;attr.array[i+1]=y+Math.sin(phase-.5)*amount*.32*envelope;attr.array[i]=x+sway*amount*.22*envelope}attr.needsUpdate=true;mesh.geometry.computeVertexNormals()}}
 const body=new THREE.Group();root.add(body);
 // Silhueta contínua sob o figurino e roupa de pista ajustada, com costuras luminosas.
 const hips=blob(body,'#5d315f',[0,.95,0],[.84,.61,.48],leggings);
 const leftHip=blob(body,'#5d315f',[-.46,.96,-.2],[.49,.55,.4],leggings),rightHip=blob(body,'#5d315f',[.46,.96,-.2],[.49,.55,.4],leggings);
 const leftGlute=leftHip,rightGlute=rightHip;
 const leftButt=blob(body,'#5d315f',[-.43,.95,-.38],[.48,.55,.37],leggings),rightButt=blob(body,'#5d315f',[.43,.95,-.38],[.48,.55,.37],leggings);
-profileMesh(body,topmat,[[1.42,.53,.32],[1.58,.5,.31],[1.78,.58,.35],[1.98,.73,.4],[2.2,.76,.37],[2.4,.5,.28],[2.48,.37,.24]],48,.065);
+const leftGluteMotion=addSoftMotion(leftButt,0,0,.026,-1),rightGluteMotion=addSoftMotion(rightButt,0,0,.026,-1);
+const topTorso=profileMesh(body,topmat,[[1.42,.53,.32],[1.58,.5,.31],[1.78,.58,.35],[1.98,.73,.4],[2.2,.76,.37],[2.4,.5,.28],[2.48,.37,.24]],48,.065);
+const topMotion=addSoftMotion(topTorso,1.98,.3,.012);
 // Volume discreto integrado ao top opaco, sem peças esféricas sobrepostas.
 const top=blob(body,'#f4edf1',[0,1.95,.01],[.01,.01,.01],topmat),belly=blob(body,'#e9cdbd',[0,1.5,0],[.01,.01,.01],skin);
 line(body,[[-.56,1.72,.32],[-.3,1.67,.39],[0,1.65,.4],[.3,1.67,.39],[.56,1.72,.32]],.025,mat('#ff85c9',.32,.15));
@@ -84,10 +87,12 @@ const partner=new THREE.Group();partnerRoot.add(partner);
 const latex=mat('#b85d9c',.3,.18),latexBright=mat('#ffd0e3',.24,.08),latexTrim=mat('#ff75c8',.22,.15);
 const partnerSkin=mat('#e9cdbd',.58),partnerHair=mat('#fff8f1',.32),headset=mat('#201a2d',.25,.35);
 const partnerTorso=profileMesh(partner,latex,[[1.45,.43,.28],[1.65,.42,.27],[1.9,.55,.32],[2.12,.58,.32],[2.32,.4,.24],[2.38,.3,.21]],48,.035);
+const partnerTopMotion=addSoftMotion(partnerTorso,2.02,.27,.01);
 // Costuras frontais do macacão permanecem planas e integradas ao torso.
 blob(partner,'#b85d9c',[0,1.08,0],[.72,.52,.45],latex);
 const partnerLeftHip=blob(partner,'#b85d9c',[-.42,1.02,-.2],[.44,.55,.4],latex),partnerRightHip=blob(partner,'#b85d9c',[.42,1.02,-.2],[.44,.55,.4],latex);
 const partnerLeftGlute=blob(partner,'#b85d9c',[-.4,1.02,-.38],[.45,.55,.35],latex),partnerRightGlute=blob(partner,'#b85d9c',[.4,1.02,-.38],[.45,.55,.35],latex);
+const partnerLeftGluteMotion=addSoftMotion(partnerLeftGlute,0,0,.022,-1),partnerRightGluteMotion=addSoftMotion(partnerRightGlute,0,0,.022,-1);
 line(partner,[[-.68,1.45,.15],[0,1.4,.38],[.68,1.45,.15]],.023,latexBright);blob(partner,'#ffd0e3',[0,1.55,.3],[.035,.25,.025],latexBright);
 const partnerLeftLeg=blob(partner,'#b85d9c',[-.34,.08,0],[.32,.96,.32],latex),partnerRightLeg=blob(partner,'#b85d9c',[.34,.08,0],[.32,.96,.32],latex);
 const partnerLeftBoot=blob(partner,'#b85d9c',[-.34,-1.28,.1],[.36,.4,.42],latex),partnerRightBoot=blob(partner,'#b85d9c',[.34,-1.28,.1],[.36,.4,.42],latex);
@@ -123,11 +128,11 @@ document.getElementById('tempo').onclick=()=>{bpm=bpm>=148?88:bpm+10;document.ge
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(drag){targetRot+=(e.clientX-lastX)*.006;lastX=e.clientX}});renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);renderer.domElement.addEventListener('wheel',e=>{zoom=THREE.MathUtils.clamp(zoom+e.deltaY*.008,7,20);zoomSlider.value=zoom;zoomValue.textContent=zoom.toFixed(1)} ,{passive:true});
 const zoomSlider=document.getElementById('cameraZoom'),zoomValue=document.getElementById('zoomValue');zoomSlider.addEventListener('input',()=>{zoom=Number(zoomSlider.value);zoomValue.textContent=zoom.toFixed(1)});
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;const beatLen=60/bpm,phase=(elapsed%beatLen)/beatLen;bar.style.transform=`translateX(${phase*330-100}%)`;
- const wave=Math.sin(elapsed*Math.PI*2*(bpm/60));const sway=Math.sin(elapsed*2.25);const bounce=Math.abs(wave);const bootyWiggle=Math.sin(elapsed*7.5)*.2;
+ const wave=Math.sin(elapsed*Math.PI*2*(bpm/60));const sway=Math.sin(elapsed*2.25);const bounce=Math.abs(wave);const bootyWiggle=Math.sin(elapsed*7.5)*.2;topMotion(elapsed*3.4,sway);leftGluteMotion(elapsed*7.5,sway);rightGluteMotion(elapsed*7.5+Math.PI*.18,-sway);
  body.position.y=.18 + Math.abs(wave)*.18 + hitPulse*.08;
  body.rotation.z=sway*.08;
  body.rotation.y=Math.sin(elapsed*1.3)*.18;
- const partnerBeat=Math.sin(elapsed*Math.PI*2*(bpm/60)+.7),partnerBounce=Math.abs(partnerBeat),partnerWiggle=Math.sin(elapsed*7.5);partner.position.y=-.15+partnerBounce*.17+hitPulse*.06;
+ const partnerBeat=Math.sin(elapsed*Math.PI*2*(bpm/60)+.7),partnerBounce=Math.abs(partnerBeat),partnerWiggle=Math.sin(elapsed*7.5);partnerTopMotion(elapsed*3.2+.4,partnerWiggle);partnerLeftGluteMotion(elapsed*7.5+.6,partnerWiggle);partnerRightGluteMotion(elapsed*7.5+Math.PI*.2,-partnerWiggle);partner.position.y=-.15+partnerBounce*.17+hitPulse*.06;
  partner.rotation.z=Math.sin(elapsed*2.1+.8)*.055;
  partner.rotation.y=Math.sin(elapsed*1.15+.6)*.14;
  partnerLeftArm.rotation.z=-.62+Math.sin(elapsed*3.1)*.08;
